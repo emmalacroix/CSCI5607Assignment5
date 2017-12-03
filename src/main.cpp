@@ -55,6 +55,7 @@ string fragFile = "Shaders/phong.frag";
 /*=============================*/
 ifstream checkSceneFile(char* fileName);
 SDL_Window* initSDL(SDL_GLContext& context);
+bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld);
 
 int main(int argc, char const *argv[]) {
   //used to for "speed" of character/camera
@@ -242,7 +243,23 @@ int main(int argc, char const *argv[]) {
 
 	while (!quit && !complete)
 	{
-
+    if (SDL_PollEvent(&windowEvent))
+    {
+      switch (windowEvent.type) {
+        case SDL_QUIT:
+				    quit = true; //Exit event loop
+				    break;
+        case SDL_KEYDOWN:
+          //check for escape or fullscreen before checking other commands
+          if (windowEvent.key.keysym.sym == SDLK_ESCAPE) quit = true; //Exit event loop
+          else if (windowEvent.key.keysym.sym == SDLK_f) fullscreen = !fullscreen;
+          complete = onKeyDown(windowEvent.key, player, myWorld);
+          break;
+        default:
+          break;
+      }//END polling switch
+			SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0); //Set to full screen
+    }//END polling if
 
 
     glClearColor(.2f, 0.4f, 0.8f, 1.0f);
@@ -356,3 +373,176 @@ ifstream checkSceneFile(char * fileName)
 
 	return scene_input;
 }
+
+/*--------------------------------------------------------------*/
+// onKeyDown : determine which key was pressed and how to edit
+//				current translation or rotation parameters
+/*--------------------------------------------------------------*/
+bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
+{
+	Vec3D pos = player->getPos();
+	Vec3D dir = player->getDir();
+	Vec3D right = player->getRight();
+	Vec3D up = player->getUp();
+
+	//temps to be modified in switch
+	Vec3D temp_pos = pos;
+	Vec3D temp_dir = dir;
+	Vec3D temp_right = right;
+	Vec3D temp_up = up;
+
+	float collision_radius = myWorld->getCollisionRadius();
+	WorldObject* front_obj = myWorld->checkCollision(pos + 0.5*collision_radius*dir);
+
+	Vec3D col_pos = temp_pos;
+
+	switch (event.keysym.sym)
+	{
+	/////////////////////////////////
+	//TRANSLATION WITH ARROW KEYS  //
+	/////////////////////////////////
+	case SDLK_UP:
+		//printf("Up arrow pressed - step forward\n");
+		temp_pos = pos + (step_size*dir);
+		col_pos = temp_pos + collision_radius*dir;
+		break;
+	case SDLK_DOWN:
+		//printf("Down arrow pressed - step backward\n");
+		temp_pos = pos - (step_size*dir);
+		col_pos = temp_pos - collision_radius*dir;
+		break;
+	case SDLK_RIGHT:
+		//printf("Right arrow pressed - step to the right\n");
+		temp_pos = pos + (step_size*right);
+		col_pos = temp_pos + collision_radius*right;
+		break;
+	case SDLK_LEFT:
+		//printf("Left arrow pressed - step to the left\n");
+		temp_pos = pos - (step_size*right);
+		col_pos = temp_pos - collision_radius*right;
+		break;
+	////////////////////////////////
+	//TURNING WITH A/D KEYS		  //
+	////////////////////////////////
+	case SDLK_d:
+		//printf("D key pressed - turn to the right\n");
+		temp_dir = dir + (step_size*right);
+		temp_right = cross(temp_dir, up); //calc new right using new dir
+		break;
+	case SDLK_a:
+		//printf("A key pressed - turn to the left\n");
+		temp_dir = dir - (step_size*right);
+		temp_right = cross(temp_dir, up); //calc new right using new dir
+		break;
+	////////////////////////////////
+	//TILTING WITH W/S KEYS		  //
+	////////////////////////////////
+	/*case SDLK_w:
+		//printf("W key pressed - tilt up\n");
+		player->setDir(dir + (step_size*up));
+		player->setUp(cross(right, player->getDir())); //calc new up using new dir
+		break;
+	case SDLK_s:
+		//printf("S key pressed - tilt down\n");
+		player->setDir(dir + (-1*step_size*up));
+		player->setUp(cross(right, player->getDir())); //calc new up using new dir
+		break;*/
+	////////////////////////////////
+	//SPACEBAR PRESS			  //
+	////////////////////////////////
+	case SDLK_SPACE:
+	{
+		//see what's in front of us
+		if (front_obj->getType() == KEY_WOBJ)
+		{
+			WO_Key* key_obj = (WO_Key*)front_obj;
+			cout << "Pressed space and grabbed key " << key_obj->getID() << endl;
+
+			//1. place in Character's inventory
+			player->addToInventory(key_obj);
+
+			//2. remove from World map
+			myWorld->removeWO(key_obj->getWPosition());
+		}
+		else
+		{
+			player->nextItem();
+		}
+		break;
+	}
+	default:
+		break;
+	}//END switch key press
+
+	//new dir and right aren't affected by collisions
+	player->setDir(temp_dir);
+	player->setRight(temp_right);
+
+	//only set new pos if no collisions
+	WorldObject* collided_obj = myWorld->checkCollision(col_pos);
+
+	SDL_Event windowEvent;
+
+	if (collided_obj != nullptr)
+	{
+		//check what we collided with!
+		switch (collided_obj->getType())
+		{
+		case GOAL_WOBJ:
+			printf("\nCongrats!! You completed this map!!\n");
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION,
+				"Congrats!! You completed this map!!",
+				"Load in another map to keep playing!",
+				NULL);
+			return true; //true -- complete!
+		case KEY_WOBJ:
+			printf("Collided with a key\n");
+			//temp_pos = pos; //don't move into the key
+			break;
+		case DOOR_WOBJ:
+		{
+			//check if we have the right key
+			WO_Door* door = (WO_Door*)collided_obj;
+			char d_id = door->getID();
+
+			if (door->isLocked())
+			{
+				//cout << "Collided with locked door " << d_id << endl;
+
+				if (player->hasKey(d_id))
+				{
+					printf("We have the right key (%c)!\n", d_id);
+					door->unlock();
+				}
+
+				temp_pos = pos;
+			}
+			else
+			{
+				//cout << "Collided with unlocked door " << d_id << endl;
+
+				if (door->getWPosition().getY() < myWorld->getCellWidth())
+				{
+					//if door is unlocked and not all the way up - don't move
+					temp_pos = pos;
+				}
+				//walk through if it's unlocked and all the way up
+			}
+			break;
+		}
+		case WALL_WOBJ:
+			//cout << "Collided with a wall" << endl;
+			temp_pos = pos; //don't move into the wall
+			break;
+		default:
+			//collided with start -- do nothing
+			break;
+		}//END collision switch
+	}
+	else //else temp_pos is out of bounds
+	{
+		temp_pos = pos;
+	}
+	player->setPos(temp_pos);
+	return false;
+}//END onKeyUp
