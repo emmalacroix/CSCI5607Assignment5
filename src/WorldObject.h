@@ -21,7 +21,8 @@ enum WOBJ_type
 	DOOR_WOBJ,
 	KEY_WOBJ,
 	GOAL_WOBJ,
-	START_WOBJ
+	START_WOBJ,
+	PORTAL_WOBJ
 };
 
 class WorldObject
@@ -57,10 +58,11 @@ public:
 	Vec3D getSize();
 
 	//OTHER
-	void draw(Camera* cam, GLuint shaderProgram); //shared draw function among WObjs
+	
 
 	//VIRTUAL
 	virtual int getType();
+	virtual void draw(Camera* cam, GLuint shaderProgram); //shared draw function among WObjs; WO_Portal has its own implementation
 
 };
 

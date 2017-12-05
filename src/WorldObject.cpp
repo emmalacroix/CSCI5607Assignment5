@@ -98,6 +98,17 @@ Vec3D WorldObject::getSize()
 /*----------------------------*/
 // OTHERS
 /*----------------------------*/
+
+
+
+/*----------------------------*/
+// VIRTUALS
+/*----------------------------*/
+int WorldObject::getType()
+{
+	return EMPTY_WOBJ;
+}
+
 //assumes that the models have already been loaded into the VBO before this call
 void WorldObject::draw(Camera* cam, GLuint shaderProgram)
 {
@@ -132,12 +143,4 @@ void WorldObject::draw(Camera* cam, GLuint shaderProgram)
 	//starts at an offset of start_vertex_index
 	//(Primitive Type, Start Vertex, End Vertex)
 	glDrawArrays(GL_TRIANGLES, start_vertex_index, total_vertices);
-}
-
-/*----------------------------*/
-// VIRTUALS
-/*----------------------------*/
-int WorldObject::getType()
-{
-	return EMPTY_WOBJ;
 }

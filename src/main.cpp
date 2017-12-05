@@ -57,7 +57,7 @@ ifstream checkSceneFile(char* fileName);
 SDL_Window* initSDL(SDL_GLContext& context);
 bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld);
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char *argv[]) {
   //used to for "speed" of character/camera
 	const float cell_width = 1.0;
 
@@ -94,50 +94,11 @@ int main(int argc, char const *argv[]) {
 		exit(0);
 	}
 
-  /////////////////////////////////
-	//PARSE SCENE FILE
 	/////////////////////////////////
-  World* myWorld = new World();
-	myWorld->setCellWidth(cell_width);
-	cout << "\nCell width set to " << cell_width << endl;
-	myWorld->setCollisionRadius(cell_width/2.0);
-	cout << "\nCollision radius set to " << cell_width/2.0 << endl;
-
-	if (!myWorld->parseFile(scene_input))
-	{
-		cout << "ERROR: file unsuccessfully parsed." << endl;
-
-		//clean up and exit
-		delete[] cubeData;
-		delete[] sphereData;
-		delete[] modelData;
-		myWorld->~World();
-		scene_input.close();
-		exit(0);
-	}
-	scene_input.close();
-	cout << "\nSuccessfully parsed scenefile." << endl;
-
-  /////////////////////////////////
-	//SETUP CHARACTER
-	/////////////////////////////////
-	Vec3D start_pos = myWorld->getStartWorldPosition();
-	//start_pos.setY(0.25*cell_width);
-	cout << "Camera starting position : ";
-	start_pos.print();
-
-	Camera* cam = new Camera();
-
-	Character* player = new Character();
-	player->setDir(Vec3D(1, 0, 0));					//look along +x
-	player->setPos(start_pos);						//start at the starting position
-	player->setUp(Vec3D(0, 1, 0));					//map is in xz plane
-	player->setRight(Vec3D(0, 0, 1));				//look along +x
-
-  /////////////////////////////////
 	//LOAD IN MODELS
 	/////////////////////////////////
 	World* myWorld = new World();
+
 	int total_verts = 0;
 
 	//CUBE
@@ -171,6 +132,44 @@ int main(int argc, char const *argv[]) {
 	//copy data into modelData array
 	copy(cubeData, cubeData + CUBE_VERTS * 8, modelData);
 	copy(sphereData, sphereData + SPHERE_VERTS * 8, modelData + (CUBE_VERTS * 8));
+
+  /////////////////////////////////
+	//PARSE SCENE FILE
+	/////////////////////////////////
+	myWorld->setCellWidth(cell_width);
+	cout << "\nCell width set to " << cell_width << endl;
+	myWorld->setCollisionRadius(cell_width/2.0);
+	cout << "\nCollision radius set to " << cell_width/2.0 << endl;
+
+	if (!myWorld->parseFile(scene_input))
+	{
+		cout << "ERROR: file unsuccessfully parsed." << endl;
+
+		//clean up and exit
+		myWorld->~World();
+		delete[] cubeData;
+		delete[] sphereData;
+		scene_input.close();
+		exit(0);
+	}
+	scene_input.close();
+	cout << "\nSuccessfully parsed scenefile." << endl;
+
+  /////////////////////////////////
+	//SETUP CHARACTER
+	/////////////////////////////////
+	Vec3D start_pos = myWorld->getStartWorldPosition();
+	//start_pos.setY(0.25*cell_width);
+	cout << "Camera starting position : ";
+	start_pos.print();
+
+	Camera* cam = new Camera();
+
+	Character* player = new Character();
+	player->setDir(Vec3D(1, 0, 0));					//look along +x
+	player->setPos(start_pos);						//start at the starting position
+	player->setUp(Vec3D(0, 1, 0));					//map is in xz plane
+	player->setRight(Vec3D(0, 0, 1));				//look along +x
 
   /////////////////////////////////
 	//BUILD VERTEX ARRAY OBJECT	   //
