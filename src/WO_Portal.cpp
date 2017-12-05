@@ -88,7 +88,7 @@ void WorldObject::draw(Camera* cam, GLuint shaderProgram)
 
 	//starts at an offset of start_vertex_index
 	//(Primitive Type, Start Vertex, End Vertex)
-	glDrawArrays(GL_TRIANGLES, start_vertex_index, total_vertices);
+	glDrawArrays(GL_TRIANGLE_FAN, start_vertex_index, total_vertices);
 }
 
 /*----------------------------*/
