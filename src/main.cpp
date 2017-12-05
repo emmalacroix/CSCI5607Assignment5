@@ -58,10 +58,10 @@ SDL_Window* initSDL(SDL_GLContext& context);
 bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld);
 
 int main(int argc, char *argv[]) {
-  //used to for "speed" of character/camera
+	//used to for "speed" of character/camera
 	const float cell_width = 1.0;
 
-  /////////////////////////////////
+	/////////////////////////////////
 	//OPEN SCENE FILE
 	/////////////////////////////////
 	if (argc != 2) {
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 
-  /////////////////////////////////
+	/////////////////////////////////
 	//INITIALIZE SDL WINDOW
 	/////////////////////////////////
 	SDL_GLContext context;
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
 	copy(cubeData, cubeData + CUBE_VERTS * 8, modelData);
 	copy(sphereData, sphereData + SPHERE_VERTS * 8, modelData + (CUBE_VERTS * 8));
 
-  /////////////////////////////////
+	/////////////////////////////////
 	//PARSE SCENE FILE
 	/////////////////////////////////
 	myWorld->setCellWidth(cell_width);
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
 	scene_input.close();
 	cout << "\nSuccessfully parsed scenefile." << endl;
 
-  /////////////////////////////////
+	/////////////////////////////////
 	//SETUP CHARACTER
 	/////////////////////////////////
 	Vec3D start_pos = myWorld->getStartWorldPosition();
@@ -171,8 +171,8 @@ int main(int argc, char *argv[]) {
 	player->setUp(Vec3D(0, 1, 0));					//map is in xz plane
 	player->setRight(Vec3D(0, 0, 1));				//look along +x
 
-  /////////////////////////////////
-	//BUILD VERTEX ARRAY OBJECT	   //
+	/////////////////////////////////
+	//BUILD VERTEX ARRAY OBJECT
 	/////////////////////////////////
 	//This stores the VBO and attribute mappings in one object
 	GLuint vao;
@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
 	glBindVertexArray(vao); //Bind the above created VAO to the current context
 
 	/////////////////////////////////
-	//BUILD VERTEX BUFFER OBJECT   //
+	//BUILD VERTEX BUFFER OBJECT
 	/////////////////////////////////
 	//Allocate memory on the graphics card to store geometry (vertex buffer object)
 	GLuint vbo[1];
@@ -190,92 +190,100 @@ int main(int argc, char *argv[]) {
 	//GL_STATIC_DRAW means we won't change the geometry, GL_DYNAMIC_DRAW = geometry changes infrequently
 	//GL_STREAM_DRAW = geom. changes frequently.  This effects which types of GPU memory is used
 
-  /////////////////////////////////
-  //SETUP SHADERS				   //
-  /////////////////////////////////
-  GLuint shaderProgram = util::LoadShader("Shaders/phongTex.vert", "Shaders/phongTex.frag");
+	/////////////////////////////////
+	//SETUP SHADERS
+	/////////////////////////////////
+	GLuint shaderProgram = util::LoadShader("Shaders/phongTex.vert", "Shaders/phongTex.frag");
 
-  //load in textures
-  GLuint tex0 = util::LoadTexture("Shaders/wood.bmp");
-  GLuint tex1 = util::LoadTexture("Shaders/grey_stones.bmp");
+	//load in textures
+	GLuint tex0 = util::LoadTexture("Shaders/wood.bmp");
+	GLuint tex1 = util::LoadTexture("Shaders/grey_stones.bmp");
 
-  if (tex0 == -1 || tex1 == 1 || shaderProgram == -1)
-  {
-    //Clean Up
-    SDL_GL_DeleteContext(context);
-    SDL_Quit();
-    myWorld->~World();
-    cam->~Camera();
-    player->~Character();
-    delete[] modelData;
-    delete[] cubeData;
-    delete[] sphereData;
-  }
+	if (tex0 == -1 || tex1 == 1 || shaderProgram == -1)
+	{
+		//Clean Up
+		SDL_GL_DeleteContext(context);
+		SDL_Quit();
+		myWorld->~World();
+		cam->~Camera();
+		player->~Character();
+		delete[] modelData;
+		delete[] cubeData;
+		delete[] sphereData;
+	}
 
-  //Tell OpenGL how to set fragment shader input
-  GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-  glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
-  //Attribute, vals/attrib., type, normalized?, stride, offset
-  //Binds to VBO current GL_ARRAY_BUFFER
-  glEnableVertexAttribArray(posAttrib);
+	//Tell OpenGL how to set fragment shader input
+	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
+	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
+	//Attribute, vals/attrib., type, normalized?, stride, offset
+	//Binds to VBO current GL_ARRAY_BUFFER
+	glEnableVertexAttribArray(posAttrib);
 
-  GLint normAttrib = glGetAttribLocation(shaderProgram, "inNormal");
-  glVertexAttribPointer(normAttrib, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
-  glEnableVertexAttribArray(normAttrib);
+	GLint normAttrib = glGetAttribLocation(shaderProgram, "inNormal");
+	glVertexAttribPointer(normAttrib, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+	glEnableVertexAttribArray(normAttrib);
 
-  GLint texAttrib = glGetAttribLocation(shaderProgram, "inTexcoord");
-  glEnableVertexAttribArray(texAttrib);
-  glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	GLint texAttrib = glGetAttribLocation(shaderProgram, "inTexcoord");
+	glEnableVertexAttribArray(texAttrib);
+	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 
-  glBindVertexArray(0); //Unbind the VAO in case we want to create a new one
+	glBindVertexArray(0); //Unbind the VAO in case we want to create a new one
 
-  glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 
-  /*===========================================================================================
+	/*===========================================================================================
 	* EVENT LOOP (Loop forever processing each event as fast as possible)
 	* List of keycodes: https://wiki.libsdl.org/SDL_Keycode - You can catch many special keys
 	* Scancode referes to a keyboard position, keycode referes to the letter (e.g., EU keyboards)
 	===========================================================================================*/
-  SDL_Event windowEvent;
+	SDL_Event windowEvent;
 	bool quit = false;
 	bool complete = false;
 
 	while (!quit && !complete)
 	{
-    if (SDL_PollEvent(&windowEvent))
-    {
-      switch (windowEvent.type) {
-        case SDL_QUIT:
-				    quit = true; //Exit event loop
-				    break;
-        case SDL_KEYDOWN:
-          //check for escape or fullscreen before checking other commands
-          if (windowEvent.key.keysym.sym == SDLK_ESCAPE) quit = true; //Exit event loop
-          else if (windowEvent.key.keysym.sym == SDLK_f) fullscreen = !fullscreen;
-          complete = onKeyDown(windowEvent.key, player, myWorld);
-          break;
-        default:
-          break;
-      }//END polling switch
+		if (SDL_PollEvent(&windowEvent))
+		{
+			switch (windowEvent.type)
+			{
+				case SDL_QUIT:
+						quit = true; //Exit event loop
+						break;
+				case SDL_KEYDOWN:
+					//check for escape or fullscreen before checking other commands
+					if (windowEvent.key.keysym.sym == SDLK_ESCAPE) quit = true; //Exit event loop
+					else if (windowEvent.key.keysym.sym == SDLK_f) fullscreen = !fullscreen;
+					complete = onKeyDown(windowEvent.key, player, myWorld);
+					break;
+				default:
+					break;
+			}//END polling switch
 			SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0); //Set to full screen
-    }//END polling if
+		}//END polling if
 
+		//after we figure out moving the Character - set the Camera params
+		//by doing it this way, we could have the Camera and the Character
+		//separate in the future or do over the shoulder instead of fps
+		cam->setPos(player->getPos());
+		cam->setDir(player->getDir());
+		cam->setUp(player->getUp());
+		cam->setRight(player->getRight());
 
-    glClearColor(.2f, 0.4f, 0.8f, 1.0f);
+		glClearColor(.2f, 0.4f, 0.8f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(shaderProgram); //Set the active shader (only one can be used at a time)
 
-    //vertex shader uniforms
+		//vertex shader uniforms
 		GLint uniView = glGetUniformLocation(shaderProgram, "view");
 		GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
 		GLint uniTexID = glGetUniformLocation(shaderProgram, "texID");
 
 		//build view matrix from Camera
 		glm::mat4 view = glm::lookAt(
-			util::vec3DtoGLM(cam->getPos()),
-			util::vec3DtoGLM(cam->getPos() + cam->getDir()),  //Look at point
-			util::vec3DtoGLM(cam->getUp()));
+		util::vec3DtoGLM(cam->getPos()),
+		util::vec3DtoGLM(cam->getPos() + cam->getDir()),  //Look at point
+		util::vec3DtoGLM(cam->getUp()));
 
 		glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
 
@@ -298,10 +306,10 @@ int main(int argc, char *argv[]) {
 
 		SDL_GL_SwapWindow(window);
 
-  }//END event loop
+	}//END event loop
 
 
-  //Clean Up
+	//Clean Up
 	SDL_GL_DeleteContext(context);
 	SDL_Quit();
 	myWorld->~World();
@@ -312,13 +320,13 @@ int main(int argc, char *argv[]) {
 	delete[] sphereData;
 
 	return 0;
-}
+	}
 
-/*--------------------------------------------------------------*/
-// initSDL : initializes SDL and returns window pointer
-/*--------------------------------------------------------------*/
-SDL_Window* initSDL(SDL_GLContext& context)
-{
+	/*--------------------------------------------------------------*/
+	// initSDL : initializes SDL and returns window pointer
+	/*--------------------------------------------------------------*/
+	SDL_Window* initSDL(SDL_GLContext& context)
+	{
 	SDL_Init(SDL_INIT_VIDEO);  //Initialize Graphics (for OpenGL)
 
 	//Ask SDL to get a recent version of OpenGL (3.2 or greater)
