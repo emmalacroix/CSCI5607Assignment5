@@ -28,13 +28,11 @@
 
 #include "Vec3D.h"
 
-using namespace std;
-
 namespace util
 {
 	//returns ptr to array holding all vertex data flattened
 	//stores number of vertices within ref param num_verts
-	float* loadModel(string filename, int& num_verts);
+	float* loadModel(std::string filename, int& num_verts);
 
 	//converts Vec3D to glm vec3
 	glm::vec3 vec3DtoGLM(Vec3D v);
@@ -44,6 +42,9 @@ namespace util
 	GLuint LoadShader(const char *vertex_path, const char *fragment_path);
 
 	GLuint LoadTexture(const char* texFile);
+
+	//
+	std::vector<std::string> commaSplit(std::string line);
 }
 
 #endif

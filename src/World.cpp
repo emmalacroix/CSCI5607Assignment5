@@ -11,6 +11,7 @@ World::World()
 {
 	width = 0;
 	height = 0;
+	num_levels = 1;
 	cell_width = 1;
 	open_speed = 0.0005 * cell_width;
 }
@@ -19,6 +20,7 @@ World::World(int w, int h)
 {
 	width = w;
 	height = h;
+	num_levels = 1;
 	cell_width = 1;
 	open_speed = 0.0005 * cell_width;
 }
@@ -29,14 +31,18 @@ World::~World()
 	delete portal1;
 	delete portal2;
 
-	//delete each row
-	for (int i = 0; i < width*height; i++)
+	//delete each row of each level
+	for (int i = 0; i < num_levels; i++)
 	{
-		delete objects_array[i];
+		for (int j = 0; j < width*height; j++)
+		{
+			delete levels_array[i][j];
+		}
+		delete[] levels_array[i]; //delete pointer to level i
 	}
 
-	//delete column of pointers that pointed to each row
-	delete[] objects_array;
+	//delete column of pointers that pointed to each level
+	delete[] levels_array;
 }
 
 /*----------------------------*/
@@ -91,18 +97,19 @@ float World::getCellWidth()
 
 WorldObject* World::getWO(Vec3D v)
 {
-	float i = ((v.getX() - 0.5*cell_width) / cell_width) + 0.1;
-	float j = ((v.getZ() - 0.5*cell_width) / cell_width) + 0.1;
-	//printf("getWO indices : (%f , %f)\n", i, j);
-	return objects_array[(int)j*width + (int)i];
+	float i = ((v.getX() - 0.5*cell_width) / cell_width) + 0.1;		//col #
+	float j = ((v.getZ() - 0.5*cell_width) / cell_width) + 0.1;		//row #
+	float k = ((v.getY() - 0.5*cell_width) / cell_width) + 0.1;		//level #
+	printf("getWO level %f indices : (%f , %f)\n", k, i, j);
+	return levels_array[(int)k][(int)j*width + (int)i];
 }
 
 //map lies in xz plane
-Vec3D World::getWorldPosition(Coord2D c)
+Vec3D World::getWorldPosition(Coord2D c, int level)
 {
 	return Vec3D(
 		c.getI()* cell_width + 0.5*cell_width,
-		0,
+		level*cell_width,
 		c.getJ()*cell_width + 0.5*cell_width);
 }
 
@@ -110,7 +117,7 @@ Vec3D World::getStartWorldPosition()
 {
 	cout << "Start indices : ";
 	start_indices.print();
-	return getWorldPosition(start_indices);
+	return getWorldPosition(start_indices, start_level);
 }
 
 float World::getCollisionRadius()
@@ -124,76 +131,113 @@ float World::getCollisionRadius()
 //takes ifstream set up by main and parses scenefile
 bool World::parseFile(ifstream & input)
 {
-	//1. capture dimensions
-	input >> width >> height;
+	//1. dynamically allocate array of levels (each level is an array of WOBJ*)
+	
 
-	//2. dynamically allocate array
-	cout << "Allocating flattened 1D of length: " << width*height << endl;
-	objects_array = new WorldObject*[width*height];		//2D -> flattened 1D array
-
-	//3. Loop through rest, reading each line
+	//2. Loop through rest, reading each line
 	string line;
 	int row_num = 0;
-	while (input >> line) //Read first word in the line (i.e., the command type)
-	{
-		cout << "\nRetrieved line: " << line << endl;
+	int level_num = 0;
+	vector<string> split_line = vector<string>();
+	bool dim_set = false;
 
-		//check line length against width
-		if (line.length() != width)
+	while (input >> line) //Read first word in the line
+	{
+		cout << "\nRetrieved : " << line << endl;
+
+		//check for "#" - comments
+		if (line[0] == '#')
 		{
-			return false;
+			getline(input, line); //skip rest of line
+			cout << "Skipping comment: " << line << endl;
+			continue;
 		}
 
-		//go through each char of line
+		//split line along commas
+		split_line = util::commaSplit(line);
+
+		//check line length against width
+		if (split_line.size() != width)
+		{
+			if (split_line.size() == 3 && !dim_set) //dimensions!
+			{
+				width = stoi(split_line.at(0));
+				height = stoi(split_line.at(1));
+				num_levels = stoi(split_line.at(2));
+
+				printf("Dimensions set w : %i h : %i num_levels : %i\n", width, height, num_levels);
+
+				printf("Allocating array of double ptrs -> levels_array : %i\n", num_levels);
+				levels_array = new WorldObject**[num_levels];
+
+				dim_set = true;
+				continue;
+			}
+			else return false;
+		}
+
+		//dynamically allocate flattened array of objects (one single level)
+		if (row_num == 0)
+		{
+			cout << "Allocating level " << level_num << " : " << width*height << endl;
+			levels_array[level_num] = new WorldObject*[width*height];	//2D -> flattened 1D array
+		}
+
+		//go through each string in split_line
 		for (int i = 0; i < width; i++)
 		{
 			//row_num --> z value
 			//i		  --> x value
-			switch (line[i])
+			if (split_line.at(i) == "0")
 			{
-			case '0':
 				cout << "\tEmpty";
-				objects_array[row_num*width + i] = new WorldObject(Coord2D(i, row_num));
-				break;
-			case 'S':
+				levels_array[level_num][row_num*width + i] = new WorldObject(Coord2D(i, row_num));
+				levels_array[level_num][row_num*width + i]->setLevel(level_num);
+			}
+			else if (split_line.at(i) == "S")
+			{
 				cout << "\tStart";
-				objects_array[row_num*width + i] = buildStart(Coord2D(i, row_num));
-				break;
-			case 'W':
+				levels_array[level_num][row_num*width + i] = buildStart(Coord2D(i, row_num), level_num);
+			}
+			else if (split_line.at(i)[0] == 'D')
+			{
+				cout << "\tDoor " << split_line.at(i)[1] << " : ";
+				levels_array[level_num][row_num*width + i] = buildDoor(Coord2D(i, row_num), level_num, split_line.at(i)[1] - '0');
+			}
+			else if (split_line.at(i)[0] == 'K')
+			{
+				cout << "\tKey " << split_line.at(i)[1] << " : ";
+				levels_array[level_num][row_num*width + i] = buildKey(Coord2D(i, row_num), level_num, split_line.at(i)[1] - '0');
+			}
+			else if (split_line.at(i) == "W")
+			{
 				cout << "\tWall";
-				objects_array[row_num*width + i] = buildWall(Coord2D(i, row_num));
-				break;
-			case 'G':
+				levels_array[level_num][row_num*width + i] = buildWall(Coord2D(i, row_num), level_num);
+			}
+			else if (split_line.at(i) == "G")
+			{
 				cout << "\tGoal";
-				objects_array[row_num*width + i] = buildGoal(Coord2D(i, row_num));
-				break;
-			default:
-				//must be a Key (lower case)
-				if (islower(line[i]) && (line[i] - 'a' < 5)) //['a' , 'e']
-				{
-					cout << "\tKey: " << line[i];
-					objects_array[row_num*width + i] = buildKey(Coord2D(i, row_num), line[i]);
-				}
-				//or a door (upper case)
-				else if (isupper(line[i]) && (line[i] - 'A' < 5)) //['A' , 'E']
-				{
-					cout << "\tDoor: " << line[i];
-					objects_array[row_num*width + i] = buildDoor(Coord2D(i, row_num), line[i]);
-				}
-				else
-				{
-					cout << "ERROR. Invalid character in scenefile." << endl;
-					return false;
-				}
-				break;
-			}//END switch
+				levels_array[level_num][row_num*width + i] = buildGoal(Coord2D(i, row_num), level_num);
+			}
+			else
+			{
+				cout << "ERROR. Invalid character in scenefile." << endl;
+				return false;
+			}
 
-			printf(" Added at objects_array[%i] : ", row_num*width + i);
-			objects_array[row_num*width + i]->getWIndices().print();
+			printf(" Added at levels_array[%i][%i] : ", level_num, row_num*width + i);
+			levels_array[level_num][row_num*width + i]->getWIndices().print();
 
 		}//END line parsing For
 
-		row_num++;
+		//plug filled in level into levels array if done reading all rows in a level
+		if (row_num == height - 1)
+		{
+			//levels_array[level_num] = level;
+			level_num++;
+			row_num = 0;
+		}
+		else row_num++;
 
 	}//END parsing While
 	cout << "\n\n";
@@ -250,49 +294,52 @@ bool World::parseFile(ifstream & input)
 //also draws floor
 void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 {
-	for (int i = 0; i < width*height; i++)
+	for (int lev = 0; lev < num_levels; lev++)
 	{
-		if (objects_array[i]->getType() != EMPTY_WOBJ)	//only draw non-empty WObjs
+		for (int i = 0; i < width*height; i++)
 		{
-			if (objects_array[i]->getType() == DOOR_WOBJ)
+			if (levels_array[lev][i]->getType() != EMPTY_WOBJ)	//only draw non-empty WObjs
 			{
-				WO_Door* door = (WO_Door*)objects_array[i];
-				Vec3D d_pos = door->getWPosition();
-
-				//if the door IS NOT locked
-				if (!door->isLocked())
+				if (levels_array[lev][i]->getType() == DOOR_WOBJ)
 				{
-					if (d_pos.getY() < 2*cell_width)
+					WO_Door* door = (WO_Door*)levels_array[lev][i];
+					Vec3D d_pos = door->getWPosition();
+
+					//if the door IS NOT locked
+					if (!door->isLocked())
 					{
-						//printf("Moving door %c up!\n", door->getID());
-						d_pos.setY(d_pos.getY() + (open_speed));	//move door up if not all the way up
+						if (d_pos.getY() < 2 * cell_width)
+						{
+							//printf("Moving door %c up!\n", door->getID());
+							d_pos.setY(d_pos.getY() + (open_speed));	//move door up if not all the way up
+						}
+						else if (d_pos.getY() >= 2 * cell_width) //all the way up
+						{
+							door->lock();
+							d_pos.setY(d_pos.getY() - (open_speed));	//move door down if all the way up
+						}
 					}
-					else if (d_pos.getY() >= 2*cell_width) //all the way up
+					else //if the door IS locked
 					{
-						door->lock();
-						d_pos.setY(d_pos.getY() - (open_speed));	//move door down if all the way up
+						if (d_pos.getY() > 0 && d_pos.getY() <= 2 * cell_width)
+						{
+							d_pos.setY(d_pos.getY() - (open_speed));	//move door down if all the way up
+						}
+
+						//do nothing if we're locked and at 0
 					}
-				}
-				else //if the door IS locked
+
+					door->setWPosition(d_pos);
+					glUniform1i(uniTexID, 0); //Set texture ID to use (0 = wood texture)
+				}//END DOOR_WOBJ if
+				else
 				{
-					if (d_pos.getY() > 0 && d_pos.getY() <= 2*cell_width)
-					{
-						d_pos.setY(d_pos.getY() - (open_speed));	//move door down if all the way up
-					}
-
-					//do nothing if we're locked and at 0
+					glUniform1i(uniTexID, -1); //Set texture ID to use (-1 = no texture)
 				}
-
-				door->setWPosition(d_pos);
-				glUniform1i(uniTexID, 0); //Set texture ID to use (0 = wood texture)
-			}//END DOOR_WOBJ if
-			else
-			{
-				glUniform1i(uniTexID, -1); //Set texture ID to use (-1 = no texture)
+				levels_array[lev][i]->draw(cam, shaderProgram);
 			}
-			objects_array[i]->draw(cam, shaderProgram);
-		}
-	}//END for loop
+		}//END row/col for loop
+	}//END levels for loop
 
 	glUniform1i(uniTexID, 1); //Set texture ID to use for floor (1 = brick texture)
 	floor->draw(cam, shaderProgram);
@@ -323,16 +370,18 @@ void World::removeWO(Vec3D pos)
 {
 	int i = (int)((pos.getX() - 0.5*cell_width) / cell_width);
 	int j = (int)((pos.getZ() - 0.5*cell_width) / cell_width);
-	objects_array[j*width + i] = new WorldObject(); //make it empty!
+	int k = (int)((pos.getY() - 0.5*cell_width) / cell_width);
+	levels_array[k][j*width + i] = new WorldObject(); //make it empty!
 }
 
 /*----------------------------*/
 // PRIVATE FUNCTIONS
 /*----------------------------*/
 //start will start off as a green sphere
-WorldObject* World::buildStart(Coord2D c)
+WorldObject* World::buildStart(Coord2D c, int level)
 {
 	start_indices = c;
+	start_level = level;
 	
 	WorldObject* start = new WO_Start(c);
 	start->setVertStartIndex(SPHERE_START);
@@ -345,14 +394,15 @@ WorldObject* World::buildStart(Coord2D c)
 
 	start->setMaterial(mat);
 	start->setSize(Vec3D(0.1, 0.1, 0.1));
-	Vec3D p = getWorldPosition(c);
+	Vec3D p = getWorldPosition(c, level);
 	start->setWPosition(p);
+	start->setLevel(level);
 
 	return start;
 }
 
 //a wall is a white cube
-WorldObject* World::buildWall(Coord2D c)
+WorldObject* World::buildWall(Coord2D c, int level)
 {
 	WorldObject* wall = new WO_Wall(c);
 	wall->setVertStartIndex(CUBE_START);
@@ -365,13 +415,14 @@ WorldObject* World::buildWall(Coord2D c)
 
 	wall->setMaterial(mat);
 	wall->setSize(Vec3D(cell_width, cell_width, cell_width));
-	wall->setWPosition(getWorldPosition(c));
+	wall->setWPosition(getWorldPosition(c, level));
+	wall->setLevel(level);
 
 	return wall;
 }
 
 //goal is a golden sphere
-WorldObject* World::buildGoal(Coord2D c)
+WorldObject* World::buildGoal(Coord2D c, int level)
 {
 	WorldObject* goal = new WO_Goal(c);
 	goal->setVertStartIndex(SPHERE_START);
@@ -384,74 +435,72 @@ WorldObject* World::buildGoal(Coord2D c)
 
 	goal->setMaterial(mat);
 	goal->setSize(Vec3D(0.25, 0.25, 0.25));
-	goal->setWPosition(getWorldPosition(c));
+	goal->setWPosition(getWorldPosition(c, level));
+	goal->setLevel(level);
 
 	return goal;
 }
 
 //key is a small cube
-WorldObject* World::buildKey(Coord2D c, char ch)
+WorldObject* World::buildKey(Coord2D c, int level, int i)
 {
-	WorldObject* key = new WO_Key(c, ch);
+	WorldObject* key = new WO_Key(c, i);
 	key->setVertStartIndex(CUBE_START);
 	key->setTotalVertices(CUBE_VERTS);
 
 	Material mat = Material();
-	glm::vec3 color = getLetterColor(ch);
+	glm::vec3 color = getLetterColor(i);
 	mat.setAmbient(color);
 	mat.setDiffuse(color);
 	mat.setSpecular(glm::vec3(0.5, 0.5, 0.5));
 
 	key->setMaterial(mat);
 	key->setSize(cell_width*0.05*Vec3D(1,1,1));
-	key->setWPosition(getWorldPosition(c));
+	key->setWPosition(getWorldPosition(c, level));
+	key->setLevel(level);
 
 	return key;
 }
 
 //door is a wall-sized cube
-WorldObject* World::buildDoor(Coord2D c, char ch)
+WorldObject* World::buildDoor(Coord2D c, int level, int i)
 {
-	WorldObject* door = new WO_Door(c, ch);
+	WorldObject* door = new WO_Door(c, i);
 	door->setVertStartIndex(CUBE_START);
 	door->setTotalVertices(CUBE_VERTS);
 
 	Material mat = Material();
-	glm::vec3 color = getLetterColor(ch);
+	glm::vec3 color = getLetterColor(i);
 	mat.setAmbient(color);
 	mat.setDiffuse(color);
 	mat.setSpecular(glm::vec3(0.2, 0.2, 0.2));
 
 	door->setMaterial(mat);
 	door->setSize(Vec3D(cell_width, cell_width, cell_width));
-	door->setWPosition(getWorldPosition(c));
+	door->setWPosition(getWorldPosition(c, level));
+	door->setLevel(level);
 
 	return door;
 }
 
 //switch-case to get which color corresponds to read-in char
 //for doors and keys
-glm::vec3 World::getLetterColor(char ch)
+glm::vec3 World::getLetterColor(int i)
 {
-	switch (ch)
+	switch (i)
 	{
-	case 'A':
-	case 'a':
+	case 1:
 		return ORANGE;
-	case 'B':
-	case 'b':
+	case 2:
 		return BLUE;
-	case 'C':
-	case 'c':
+	case 3:
 		return RED;
-	case 'D':
-	case'd':
+	case 4:
 		return PINK;
-	case 'E':
-	case'e':
+	case 5:
 		return YELLOW;
 	default:
-		printf("\nERROR. Invalid char entered for key/door ID.\n");
+		printf("\nERROR. Invalid id number entered for key/door ID.\n");
 		return glm::vec3(-1, -1, -1);
 	}
 }

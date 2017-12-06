@@ -10,6 +10,7 @@
 #include "Vec3D.h"
 #include "Coord2D.h"
 #include "Camera.h"
+#include "Util.h"
 
 //WorldObject classes
 #include "WorldObject.h"
@@ -22,10 +23,12 @@
 
 class World{
 private:
-	WorldObject** objects_array;
+	WorldObject*** levels_array;
 	int width;
 	int height;
+	int num_levels;
 	Coord2D start_indices;
+	int start_level;
 	float cell_width;				//width of each cell/square of map
 	WorldObject* floor;
 	WorldObject* portal1;
@@ -49,12 +52,12 @@ private:
 	glm::vec3 YELLOW = glm::vec3(0.9, 0.7, 0.1);
 
 	//PRIVATE FUNCTIONS
-	WorldObject* buildStart(Coord2D c);
-	WorldObject* buildWall(Coord2D c);
-	WorldObject* buildGoal(Coord2D c);
-	WorldObject* buildKey(Coord2D c, char ch);
-	WorldObject* buildDoor(Coord2D c, char ch);
-	glm::vec3 getLetterColor(char ch);
+	WorldObject* buildStart(Coord2D c, int level);
+	WorldObject* buildWall(Coord2D c, int level);
+	WorldObject* buildGoal(Coord2D c, int level);
+	WorldObject* buildKey(Coord2D c, int level, int i);
+	WorldObject* buildDoor(Coord2D c, int level, int i);
+	glm::vec3 getLetterColor(int i);
 
 public:
 	//CONSTRUCTORS AND DESTRUCTORS
@@ -74,7 +77,7 @@ public:
 	int getHeight();
 	float getCellWidth();
 	WorldObject* getWO(Vec3D v);
-	Vec3D getWorldPosition(Coord2D c);
+	Vec3D getWorldPosition(Coord2D c, int level);
 	Vec3D getStartWorldPosition();
 	float getCollisionRadius();
 

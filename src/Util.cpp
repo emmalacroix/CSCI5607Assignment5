@@ -1,5 +1,6 @@
 #include "Util.h"
 
+using namespace std;
 
 /*--------------------------------------------------------------*/
 // loadModel : loads specified model file into float* (vert array)
@@ -143,6 +144,9 @@ GLuint util::LoadShader(const char *vertex_path, const char *fragment_path)
 	return program;
 }
 
+/*--------------------------------------------------------------*/
+// LoadTexture : 
+/*--------------------------------------------------------------*/
 GLuint util::LoadTexture(const char * texFile)
 {
 	printf("Loading %s texture.\n", texFile);
@@ -170,4 +174,27 @@ GLuint util::LoadTexture(const char * texFile)
 	SDL_FreeSurface(surface);
 	
 	return tex;
+}
+
+/*--------------------------------------------------------------*/
+// commaSplit : 
+/*--------------------------------------------------------------*/
+vector<string> util::commaSplit(string line)
+{
+	vector<string> split_str = vector<string>();
+	string temp = "";
+
+	for (int i = 0; i < line.length(); i++)
+	{
+		if (line[i] != ',') temp += line[i];
+		else
+		{
+			//cout << "adding : " << temp << endl;
+			split_str.push_back(temp);
+			temp = "";
+		}
+	}
+	//make sure to get rest after the last comma
+	split_str.push_back(temp);
+	return split_str;
 }

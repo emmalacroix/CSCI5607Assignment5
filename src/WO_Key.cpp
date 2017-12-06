@@ -13,10 +13,10 @@ WO_Key::WO_Key()
 	start_vertex_index = 0;
 	total_vertices = 0;
 	mat = Material();
-	id = '\0';
+	id = '-1';
 }
 
-WO_Key::WO_Key(Coord2D indices, char c)
+WO_Key::WO_Key(Coord2D indices, int i)
 {
 	world_pos = Vec3D(0, 0, 0);
 	world_indices = indices;
@@ -24,7 +24,7 @@ WO_Key::WO_Key(Coord2D indices, char c)
 	start_vertex_index = 0;
 	total_vertices = 0;
 	mat = Material();
-	id = c;
+	id = i;
 }
 
 
@@ -35,9 +35,9 @@ WO_Key::~WO_Key()
 /*----------------------------*/
 // SETTERS
 /*----------------------------*/
-void WO_Key::setID(char c)
+void WO_Key::setID(int i)
 {
-	id = c;
+	id = i;
 }
 
 /*----------------------------*/

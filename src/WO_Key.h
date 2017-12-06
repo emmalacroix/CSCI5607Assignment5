@@ -6,18 +6,18 @@
 class WO_Key : public WorldObject
 {
 private:
-	char id;
+	int id;
 	float radius;		//collision/drawing radius
 	bool isHeld;
 
 public:
 	//CONSTRUCTORS AND DESTRUCTORS
 	WO_Key();
-	WO_Key(Coord2D indices, char c);
+	WO_Key(Coord2D indices, int i);
 	~WO_Key();
 
 	//SETTERS
-	void setID(char c);
+	void setID(int i);
 
 	//GETTERS
 	char getID();

@@ -9,6 +9,7 @@ WorldObject::WorldObject()
 {
 	world_pos = Vec3D(0, 0, 0);
 	world_indices = Coord2D(0, 0);
+	world_level = 0;
 	size = Vec3D(1, 1, 1);
 	start_vertex_index = 0;
 	total_vertices = 0;
@@ -19,6 +20,7 @@ WorldObject::WorldObject(Coord2D indices)
 {
 	world_pos = Vec3D(0, 0, 0);
 	world_indices = indices;
+	world_level = 0;
 	size = Vec3D(1, 1, 1);
 	start_vertex_index = 0;
 	total_vertices = 0;
@@ -62,6 +64,11 @@ void WorldObject::setSize(Vec3D s)
 	size = s;
 }
 
+void WorldObject::setLevel(int l)
+{
+	world_level = l;
+}
+
 /*----------------------------*/
 // GETTERS
 /*----------------------------*/
@@ -93,6 +100,11 @@ Material WorldObject::getMaterial()
 Vec3D WorldObject::getSize()
 {
 	return size;
+}
+
+int WorldObject::getLevel()
+{
+	return world_level;
 }
 
 /*----------------------------*/

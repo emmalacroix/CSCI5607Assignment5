@@ -13,11 +13,11 @@ WO_Door::WO_Door()
 	start_vertex_index = 0;
 	total_vertices = 0;
 	mat = Material();
-	id = '\0';
+	id = '-1';
 	locked = true;
 }
 
-WO_Door::WO_Door(Coord2D indices, char c)
+WO_Door::WO_Door(Coord2D indices, int i)
 {
 	world_pos = Vec3D(0, 0, 0);
 	world_indices = indices;
@@ -25,7 +25,7 @@ WO_Door::WO_Door(Coord2D indices, char c)
 	start_vertex_index = 0;
 	total_vertices = 0;
 	mat = Material();
-	id = c;
+	id = i;
 	locked = true;
 }
 
@@ -37,9 +37,9 @@ WO_Door::~WO_Door()
 /*----------------------------*/
 // SETTERS
 /*----------------------------*/
-void WO_Door::setID(char c)
+void WO_Door::setID(int i)
 {
-	id = c;
+	id = i;
 }
 
 /*----------------------------*/
