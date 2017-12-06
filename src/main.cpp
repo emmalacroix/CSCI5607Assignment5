@@ -115,15 +115,23 @@ int main(int argc, char *argv[]) {
 	total_verts += SPHERE_VERTS;
 	myWorld->setSphereIndices(CUBE_VERTS, SPHERE_VERTS);
 
+	//OVAL
+	int OVAL_VERTS = 0;
+	float* ovalData = util::loadModel("models/oval.txt", OVAL_VERTS);
+	cout << "Number of vertices in oval model : " << OVAL_VERTS << endl;
+	total_verts += OVAL_VERTS;
+	myWorld->setOvalIndices(CUBE_VERTS + SPHERE_VERTS, OVAL_VERTS);
+
 	/////////////////////////////////
 	//BUILD MODELDATA ARRAY
 	/////////////////////////////////
-	if (!(cubeData != nullptr && sphereData != nullptr))
+	if (!(cubeData != nullptr && sphereData != nullptr && ovalData != nullptr))
 	{
 		cout << "ERROR. Unable to load model data." << endl;
 		myWorld->~World();
 		delete[] cubeData;
 		delete[] sphereData;
+		delete[] ovalData;
 		SDL_GL_DeleteContext(context);
 		SDL_Quit();
 		exit(0);
@@ -132,6 +140,7 @@ int main(int argc, char *argv[]) {
 	//copy data into modelData array
 	copy(cubeData, cubeData + CUBE_VERTS * 8, modelData);
 	copy(sphereData, sphereData + SPHERE_VERTS * 8, modelData + (CUBE_VERTS * 8));
+	copy(ovalData, ovalData + OVAL_VERTS * 8, modelData + (CUBE_VERTS * 8) + (SPHERE_VERTS * 8));
 
 	/////////////////////////////////
 	//PARSE SCENE FILE
@@ -149,6 +158,7 @@ int main(int argc, char *argv[]) {
 		myWorld->~World();
 		delete[] cubeData;
 		delete[] sphereData;
+		delete[] ovalData;
 		scene_input.close();
 		exit(0);
 	}
@@ -170,6 +180,12 @@ int main(int argc, char *argv[]) {
 	player->setPos(start_pos);						//start at the starting position
 	player->setUp(Vec3D(0, 1, 0));					//map is in xz plane
 	player->setRight(Vec3D(0, 0, 1));				//look along +x
+
+	/////////////////////////////////
+	//PORTALS
+	/////////////////////////////////
+	//testing testing
+	myWorld->movePortal1To(Vec3D(3.5,1,.9));
 
 	/////////////////////////////////
 	//BUILD VERTEX ARRAY OBJECT
@@ -210,6 +226,7 @@ int main(int argc, char *argv[]) {
 		delete[] modelData;
 		delete[] cubeData;
 		delete[] sphereData;
+		delete[] ovalData;
 	}
 
 	//Tell OpenGL how to set fragment shader input

@@ -18,6 +18,7 @@
 #include "WO_Key.h"
 #include "WO_Start.h"
 #include "WO_Wall.h"
+#include "WO_Portal.h"
 
 class World{
 private:
@@ -27,6 +28,8 @@ private:
 	Coord2D start_indices;
 	float cell_width;				//width of each cell/square of map
 	WorldObject* floor;
+	WorldObject* portal1;
+	WorldObject* portal2;
 	float collision_radius;
 	float open_speed;
 
@@ -35,6 +38,8 @@ private:
 	int CUBE_VERTS = 0;
 	int SPHERE_START = 0;
 	int SPHERE_VERTS = 0;
+	int OVAL_START = 0;
+	int OVAL_VERTS = 0;
 
 	//5 possible door and key colors
 	glm::vec3 ORANGE = glm::vec3(1.0, 0.5, 0.0);
@@ -61,6 +66,7 @@ public:
 	void setCellWidth(float w);
 	void setCubeIndices(int start, int tris);
 	void setSphereIndices(int start, int tris);
+	void setOvalIndices(int start, int tris);
 	void setCollisionRadius(float f);
 
 	//GETTERS
@@ -77,6 +83,8 @@ public:
 	void draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID);
 	WorldObject* checkCollision(Vec3D pos);
 	void removeWO(Vec3D pos);
+	void movePortal1To(Vec3D pos);
+	void movePortal2To(Vec3D pos);
 
 };
 

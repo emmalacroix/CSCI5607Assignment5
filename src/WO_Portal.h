@@ -24,6 +24,6 @@ public:
 	void draw(Camera* cam, GLuint shaderProgram);
 
 	//OTHERS
-	void moveTo(Coord2D indices);
+	void moveTo(Vec3D pos);
 };
 #endif

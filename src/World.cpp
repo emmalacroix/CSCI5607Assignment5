@@ -1,4 +1,5 @@
 #include "World.h"
+#include "WO_Portal.h"
 
 using namespace std;
 
@@ -25,6 +26,8 @@ World::World(int w, int h)
 World::~World()
 {
 	delete floor;
+	delete portal1;
+	delete portal2;
 
 	//delete each row
 	for (int i = 0; i < width*height; i++)
@@ -55,6 +58,12 @@ void World::setSphereIndices(int start, int tris)
 {
 	SPHERE_START = start;
 	SPHERE_VERTS = tris;
+}
+
+void World::setOvalIndices(int start, int tris)
+{
+	OVAL_START = start;
+	OVAL_VERTS = tris;
 }
 
 void World::setCollisionRadius(float f)
@@ -205,6 +214,34 @@ bool World::parseFile(ifstream & input)
 	Vec3D pos = Vec3D(width*cell_width*0.5, -0.5*cell_width, height*cell_width*0.5);
 
 	floor->setWPosition(pos);
+
+	//initialize portals
+
+	//portal #1
+	portal1 = new WO_Portal();
+	portal1->setVertStartIndex(OVAL_START);
+	portal1->setTotalVertices(OVAL_VERTS);
+
+	Material mat1 = Material();
+	mat1.setAmbient(glm::vec3(1, 0, 0));
+	mat1.setDiffuse(glm::vec3(1, 0, 0));
+	mat1.setSpecular(glm::vec3(0, 0, 0));
+
+	portal1->setMaterial(mat1);
+	portal1->setSize(Vec3D(cell_width, 2*cell_width, 0.01)); //xy plane
+
+	//portal #2
+	portal2 = new WO_Portal();
+	portal2->setVertStartIndex(OVAL_START);
+	portal2->setTotalVertices(OVAL_VERTS);
+
+	Material mat2 = Material();
+	mat2.setAmbient(glm::vec3(0, 0, 1));
+	mat2.setDiffuse(glm::vec3(0, 0, 1));
+	mat2.setSpecular(glm::vec3(0, 0, 0));
+
+	portal2->setMaterial(mat2);
+	portal2->setSize(Vec3D(cell_width, 2*cell_width, 0.01)); //xy plane
 	
 	return true;
 }
@@ -259,6 +296,9 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 
 	glUniform1i(uniTexID, 1); //Set texture ID to use for floor (1 = brick texture)
 	floor->draw(cam, shaderProgram);
+
+	portal1->draw(cam, shaderProgram);
+	portal2->draw(cam, shaderProgram);
 }
 
 //check if given pos vector collides with and WObjs in map
@@ -414,4 +454,16 @@ glm::vec3 World::getLetterColor(char ch)
 		printf("\nERROR. Invalid char entered for key/door ID.\n");
 		return glm::vec3(-1, -1, -1);
 	}
+}
+
+void World::movePortal1To(Vec3D pos)
+{
+	WO_Portal* portal = (WO_Portal*)portal1;
+	portal->moveTo(pos);
+}
+
+void World::movePortal2To(Vec3D pos)
+{
+	WO_Portal* portal = (WO_Portal*)portal2;
+	portal->moveTo(pos);
 }

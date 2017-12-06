@@ -58,7 +58,7 @@ public:
 	Vec3D getSize();
 
 	//OTHER
-	
+
 
 	//VIRTUAL
 	virtual int getType();
