@@ -1,6 +1,7 @@
-5 5
-0000G
-BWWWW
-0000b
-WWAWW
-S000a
+# Dimensions (Level width, Level height, number of levels)
+5,5,1
+0,0,0,0,G
+D2,W,W,W,W
+0,0,0,0,K2
+W,W,D1,W,W
+S,0,0,0,K1

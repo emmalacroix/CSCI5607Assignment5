@@ -30,6 +30,7 @@ class WorldObject
 protected:
 	Vec3D world_pos;
 	Coord2D world_indices;	//indices into World's object_array
+	int world_level;
 	Vec3D size;
 	int start_vertex_index;	//index where vertices start in modelData array
 	int total_vertices;	//total num of vertices within modelData array
@@ -48,6 +49,7 @@ public:
 	void setTotalVertices(int i);
 	void setMaterial(Material m);
 	void setSize(Vec3D s);
+	void setLevel(int l);
 
 	//GETTERS
 	Vec3D getWPosition();
@@ -56,7 +58,7 @@ public:
 	int getTotalVertices();
 	Material getMaterial();
 	Vec3D getSize();
-
+	int getLevel();
 	//OTHER
 	
 

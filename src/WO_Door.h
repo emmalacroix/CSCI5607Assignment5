@@ -5,17 +5,17 @@
 class WO_Door :	public WorldObject
 {
 private:
-	char id;
+	int id;
 	bool locked;
 
 public:
 	//CONSTRUCTORS AND DESTRUCTORS
 	WO_Door();
-	WO_Door(Coord2D indices, char c);
+	WO_Door(Coord2D indices, int i);
 	~WO_Door();
 
 	//SETTERS
-	void setID(char c);
+	void setID(int i);
 
 	//GETTERS
 	char getID();

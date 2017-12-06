@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
 	World* myWorld = new World();
 
 	int total_verts = 0;
-
+	
 	//CUBE
 	int CUBE_VERTS = 0;
 	float* cubeData = util::loadModel("models/cube.txt", CUBE_VERTS);
@@ -159,7 +159,6 @@ int main(int argc, char *argv[]) {
 	//SETUP CHARACTER
 	/////////////////////////////////
 	Vec3D start_pos = myWorld->getStartWorldPosition();
-	//start_pos.setY(0.25*cell_width);
 	cout << "Camera starting position : ";
 	start_pos.print();
 
@@ -307,7 +306,7 @@ int main(int argc, char *argv[]) {
 		SDL_GL_SwapWindow(window);
 
 	}//END event loop
-
+	
 
 	//Clean Up
 	SDL_GL_DeleteContext(context);
@@ -444,16 +443,16 @@ bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	////////////////////////////////
 	//TILTING WITH W/S KEYS		  //
 	////////////////////////////////
-	/*case SDLK_w:
+	case SDLK_w:
 		//printf("W key pressed - tilt up\n");
-		player->setDir(dir + (step_size*up));
-		player->setUp(cross(right, player->getDir())); //calc new up using new dir
+		temp_dir = dir + (step_size*up);
+		temp_up = cross(right, temp_dir); //calc new up using new dir
 		break;
 	case SDLK_s:
 		//printf("S key pressed - tilt down\n");
-		player->setDir(dir + (-1*step_size*up));
-		player->setUp(cross(right, player->getDir())); //calc new up using new dir
-		break;*/
+		temp_dir = dir - (step_size*up);
+		temp_up = cross(right, temp_dir); //calc new up using new dir
+		break;
 	////////////////////////////////
 	//SPACEBAR PRESS			  //
 	////////////////////////////////
@@ -484,6 +483,7 @@ bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	//new dir and right aren't affected by collisions
 	player->setDir(temp_dir);
 	player->setRight(temp_right);
+	player->setUp(temp_up);
 
 	//only set new pos if no collisions
 	WorldObject* collided_obj = myWorld->checkCollision(col_pos);

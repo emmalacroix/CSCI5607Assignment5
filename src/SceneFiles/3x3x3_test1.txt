@@ -1,0 +1,15 @@
+# Dimensions (Level width, Level height, number of levels)
+3,3,3
+# bottom to top layering
+# bottom = layer 0
+W,W,W
+0,0,W
+S,0,0
+# middle = layer 1
+W,W,0
+0,0,0
+0,0,0
+# top = layer 2
+W,0,0
+0,0,0
+0,0,0
