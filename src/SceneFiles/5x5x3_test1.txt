@@ -1,31 +1,21 @@
 # Dimensions (Level width, Level height, number of levels)
 5,5,3
 # bottom level (y = (3-3)*cell_width)
-0,D2,0,0,0
+0,D2,0,0,S
 0,W,W,D1,W
 0,W,K1,0,W
 W,W,0,0,W
 W,W,0,0,W
 # middle level (y = (3-2)*cell_width)
 0,0,0,0,0
-W,W,W,0,0
+0,W,W,0,0
+0,W,0,0,W
 W,W,0,0,W
 W,W,0,0,W
-W,W,0,0,W
-<<<<<<< HEAD
 # top level (y = (3-1)*cell_width)
 0,0,0,0,0
 K2,0,W,0,0
 W,0,0,0,W
 W,0,0,0,W
-S,0,0,0,W
+W,0,0,0,W
 # floor drawn underneath at y = -0.5*cell_width
-=======
-#bottom level (y = (3-3)*cell_width)
-0,G2,0,0,0
-W,W,W,G1,W
-W,W,K1,0,W
-W,W,0,0,W
-W,W,0,0,W
-#floor drawn underneath at y = -0.5*cell_width
->>>>>>> 72cab545fcacef583586c1c9c95db6b9480a9c55
