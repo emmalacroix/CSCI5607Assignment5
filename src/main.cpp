@@ -34,6 +34,7 @@
 #include "Camera.h"
 #include "Character.h"
 #include "Util.h"
+#include "Intersection.h"
 
 using namespace std;
 
@@ -57,6 +58,7 @@ ifstream checkSceneFile(char* fileName);
 SDL_Window* initSDL(SDL_GLContext& context);
 bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld);
 bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player);
+bool isFalling(World* myWorld, Character* player);
 
 int main(int argc, char *argv[]) {
 	//used to for "speed" of character/camera
@@ -416,7 +418,8 @@ bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	Vec3D temp_up = up;
 
 	float collision_radius = myWorld->getCollisionRadius();
-	WorldObject* front_obj = myWorld->checkCollision(pos + 0.5*collision_radius*dir);
+	Intersection iSect = myWorld->checkCollision(pos + 0.5*collision_radius*dir);
+	WorldObject* front_obj = iSect.getObject();
 
 	switch (event.keysym.sym)
 	{
@@ -506,11 +509,14 @@ bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	return true;
 	
 }
+
 bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 {
 	Vec3D pos = player->getPos();
 
-	WorldObject* collided_obj = myWorld->checkCollision(temp_pos);
+	Intersection iSect = myWorld->checkCollision(temp_pos);
+	WorldObject* collided_obj = iSect.getObject();
+	Vec3D collided_pt = iSect.getPoint();
 
 	if (collided_obj != nullptr)
 	{
@@ -563,6 +569,10 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 			//cout << "Collided with a wall" << endl;
 			temp_pos = pos; //don't move into the wall
 			break;
+		case PORTAL_WOBJ:
+			cout << "Collided with a portal" << endl;
+
+			break;
 		default:
 			//collided with start -- do nothing
 			break;
@@ -573,6 +583,11 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 		temp_pos = pos;
 	}
 
+	return false;
+}
+
+bool isFalling(World * myWorld, Character * player)
+{
 	return false;
 }
 //END onKeyUp

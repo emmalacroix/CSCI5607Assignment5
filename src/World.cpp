@@ -347,10 +347,9 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 }
 
 //check if given pos vector collides with and WObjs in map
-WorldObject* World::checkCollision(Vec3D pos)
+Intersection World::checkCollision(Vec3D pos)
 {
-	//cout << "\nChecking for collision : ";
-	//pos.print();
+	Intersection iSect;
 
 	//check if in bounds of the map
 	if (pos.getX() >= 0 &&
@@ -358,10 +357,10 @@ WorldObject* World::checkCollision(Vec3D pos)
 		pos.getX() < width*cell_width &&
 		pos.getZ() < height*cell_width)
 	{
-		return getWO(pos);
+		iSect.setObject(getWO(pos));
 	}
 
-	return nullptr;
+	return iSect;
 }
 
 void World::removeWO(Vec3D pos)

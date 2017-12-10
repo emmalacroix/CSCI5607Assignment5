@@ -11,6 +11,7 @@
 #include "Coord2D.h"
 #include "Camera.h"
 #include "Util.h"
+#include "Intersection.h"
 
 //WorldObject classes
 #include "WorldObject.h"
@@ -84,7 +85,7 @@ public:
 	//OTHERS
 	bool parseFile(std::ifstream& input);
 	void draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID);
-	WorldObject* checkCollision(Vec3D pos);
+	Intersection checkCollision(Vec3D pos);
 	void removeWO(Vec3D pos);
 	void movePortal1To(Vec3D pos);
 	void movePortal2To(Vec3D pos);
