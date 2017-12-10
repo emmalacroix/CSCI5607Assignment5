@@ -497,7 +497,7 @@ bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	player->setRight(temp_right);
 	player->setUp(temp_up);
 
-	//only set new pos if no collisions
+	//only set new pos if valid (no collisions and within bounds)
 	if (!checkPosition(temp_pos, myWorld, player))
 	{
 		player->setPos(temp_pos);
