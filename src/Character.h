@@ -21,6 +21,9 @@ private:
 	std::vector<WorldObject*> inventory;
 	int cur_item_index;
 
+	//used for updating
+	Vec3D vel_VEC;
+
 public:
 	//CONSTRUCTORS AND DESTRUCTORS
 	Character();
@@ -31,6 +34,7 @@ public:
 	void setDir(Vec3D c);
 	void setUp(Vec3D c);
 	void setRight(Vec3D c);
+	void setVelocity(Vec3D v);
 
 	//GETTERS
 	Vec3D getPos();
@@ -39,6 +43,7 @@ public:
 	Vec3D getRight();
 	WorldObject* getCurItem();
 	void nextItem();
+	Vec3D getVelocity();
 
 	//OTHERS
 	bool isInventoryEmpty();

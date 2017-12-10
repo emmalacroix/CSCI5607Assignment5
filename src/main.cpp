@@ -45,7 +45,10 @@ bool fullscreen = false;
 int screen_width = 800;
 int screen_height = 600;
 
-const float step_size = 0.25f;
+//used for "speed" of character/camera
+const float cell_width = 1.0;
+const float step_size = 0.002f * cell_width;
+const float acceleration = 0.001f;
 
 //shader globals
 string vertFile = "Shaders/phong.vert";
@@ -56,14 +59,11 @@ string fragFile = "Shaders/phong.frag";
 /*=============================*/
 ifstream checkSceneFile(char* fileName);
 SDL_Window* initSDL(SDL_GLContext& context);
-bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld);
+void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld);
 bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player);
-bool isFalling(World* myWorld, Character* player);
+bool updateCharacter(Character* player, World* myWorld);
 
 int main(int argc, char *argv[]) {
-	//used to for "speed" of character/camera
-	const float cell_width = 1.0;
-
 	/////////////////////////////////
 	//OPEN SCENE FILE
 	/////////////////////////////////
@@ -268,17 +268,22 @@ int main(int argc, char *argv[]) {
 				case SDL_QUIT:
 						quit = true; //Exit event loop
 						break;
+				case SDL_KEYUP:
+					player->setVelocity(Vec3D(0, 0, 0));
+					break;
 				case SDL_KEYDOWN:
 					//check for escape or fullscreen before checking other commands
 					if (windowEvent.key.keysym.sym == SDLK_ESCAPE) quit = true; //Exit event loop
 					else if (windowEvent.key.keysym.sym == SDLK_f) fullscreen = !fullscreen;
-					complete = onKeyDown(windowEvent.key, player, myWorld);
+					onKeyDown(windowEvent.key, player, myWorld);
 					break;
 				default:
 					break;
 			}//END polling switch
 			SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0); //Set to full screen
 		}//END polling if
+
+		complete = updateCharacter(player, myWorld);
 
 		//after we figure out moving the Character - set the Camera params
 		//by doing it this way, we could have the Camera and the Character
@@ -404,7 +409,7 @@ ifstream checkSceneFile(char * fileName)
 // onKeyDown : determine which key was pressed and how to edit
 //				current translation or rotation parameters
 /*--------------------------------------------------------------*/
-bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
+void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 {
 	Vec3D pos = player->getPos();
 	Vec3D dir = player->getDir();
@@ -412,7 +417,6 @@ bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	Vec3D up = player->getUp();
 
 	//temps to be modified in switch
-	Vec3D temp_pos = pos;
 	Vec3D temp_dir = dir;
 	Vec3D temp_right = right;
 	Vec3D temp_up = up;
@@ -428,31 +432,31 @@ bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	/////////////////////////////////
 	case SDLK_UP:
 		//printf("Up arrow pressed - step forward\n");
-		temp_pos = pos + (step_size*dir);
+		player->setVelocity(step_size*dir);
 		break;
 	case SDLK_DOWN:
 		//printf("Down arrow pressed - step backward\n");
-		temp_pos = pos - (step_size*dir);
+		player->setVelocity(-1*step_size*dir);
 		break;
 	case SDLK_RIGHT:
 		//printf("Right arrow pressed - step to the right\n");
-		temp_pos = pos + (step_size*right);
+		player->setVelocity(step_size*right);
 		break;
 	case SDLK_LEFT:
 		//printf("Left arrow pressed - step to the left\n");
-		temp_pos = pos - (step_size*right);
+		player->setVelocity(-1*step_size*right);
 		break;
 	////////////////////////////////
 	//TURNING WITH A/D KEYS		  //
 	////////////////////////////////
 	case SDLK_d:
 		//printf("D key pressed - turn to the right\n");
-		temp_dir = dir + (step_size*right);
+		temp_dir = dir + (50*step_size*right);
 		temp_right = cross(temp_dir, up); //calc new right using new dir
 		break;
 	case SDLK_a:
 		//printf("A key pressed - turn to the left\n");
-		temp_dir = dir - (step_size*right);
+		temp_dir = dir - (50*step_size*right);
 		temp_right = cross(temp_dir, up); //calc new right using new dir
 		break;
 	////////////////////////////////
@@ -460,12 +464,12 @@ bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	////////////////////////////////
 	case SDLK_w:
 		//printf("W key pressed - tilt up\n");
-		temp_dir = dir + (step_size*up);
+		temp_dir = dir + (50*step_size*up);
 		temp_up = cross(right, temp_dir); //calc new up using new dir
 		break;
 	case SDLK_s:
 		//printf("S key pressed - tilt down\n");
-		temp_dir = dir - (step_size*up);
+		temp_dir = dir - (50*step_size*up);
 		temp_up = cross(right, temp_dir); //calc new up using new dir
 		break;
 	////////////////////////////////
@@ -498,17 +502,8 @@ bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	//new dir, right, and up aren't affected by collisions
 	player->setDir(temp_dir);
 	player->setRight(temp_right);
-	player->setUp(temp_up);
-
-	//only set new pos if valid (no collisions and within bounds)
-	if (!checkPosition(temp_pos, myWorld, player))
-	{
-		player->setPos(temp_pos);
-		return false;
-	}
-	return true;
-	
-}
+	player->setUp(temp_up);	
+}//END onKeyDown
 
 bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 {
@@ -584,10 +579,18 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 	}
 
 	return false;
-}
+}//END checkPosition
 
-bool isFalling(World * myWorld, Character * player)
+bool updateCharacter(Character * player, World * myWorld)
 {
-	return false;
+	Vec3D temp_pos = player->getPos() + player->getVelocity();
+
+	if (!checkPosition(temp_pos, myWorld, player))
+	{
+		player->setPos(temp_pos);
+		return false;
+	}
+
+	//returns true if game is complete
+	return true;
 }
-//END onKeyUp

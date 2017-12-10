@@ -51,6 +51,11 @@ void Character::setRight(Vec3D c)
 	right_VEC = c;
 }
 
+void Character::setVelocity(Vec3D v)
+{
+	vel_VEC = v;
+}
+
 /*----------------------------*/
 // GETTERS
 /*----------------------------*/
@@ -97,6 +102,11 @@ void Character::nextItem()
 			cur_item_index = 0;
 		}
 	}
+}
+
+Vec3D Character::getVelocity()
+{
+	return vel_VEC;
 }
 
 /*----------------------------*/
