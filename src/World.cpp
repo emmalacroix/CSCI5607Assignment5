@@ -97,10 +97,11 @@ float World::getCellWidth()
 
 WorldObject* World::getWO(Vec3D v)
 {
-	float i = ((v.getX() - 0.5*cell_width) / cell_width) + 0.1;		//col #
-	float j = ((v.getZ() - 0.5*cell_width) / cell_width) + 0.1;		//row #
-	float k = ((v.getY() - 0.5*cell_width) / cell_width) + 0.1;		//level #
-	//printf("getWO level %f indices : (%f , %f)\n", k, i, j);
+	//introduce 0.5 error to get the right indices when casted as ints
+	float i = ((v.getX() - 0.5*cell_width) / cell_width) + 0.5;		//col #
+	float j = ((v.getZ() - 0.5*cell_width) / cell_width) + 0.5;		//row #
+	float k = ((v.getY() - 0.5*cell_width) / cell_width) + 0.5;		//level #
+	printf("getWO level %f indices : (%f , %f)\n", k, i, j);
 	return levels_array[(int)k][(int)j*width + (int)i];
 }
 
@@ -131,10 +132,7 @@ float World::getCollisionRadius()
 //takes ifstream set up by main and parses scenefile
 bool World::parseFile(ifstream & input)
 {
-	//1. dynamically allocate array of levels (each level is an array of WOBJ*)
-	
-
-	//2. Loop through rest, reading each line
+	//1. Loop through each line
 	string line;
 	int row_num = 0;
 	int level_num = 0;
@@ -291,7 +289,7 @@ bool World::parseFile(ifstream & input)
 }
 
 //loops through WObj array and draws each
-//also draws floor
+//also draws floor and portals
 void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 {
 	for (int lev = 0; lev < num_levels; lev++)

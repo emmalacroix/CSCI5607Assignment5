@@ -108,12 +108,6 @@ int WorldObject::getLevel()
 }
 
 /*----------------------------*/
-// OTHERS
-/*----------------------------*/
-
-
-
-/*----------------------------*/
 // VIRTUALS
 /*----------------------------*/
 int WorldObject::getType()
@@ -121,6 +115,9 @@ int WorldObject::getType()
 	return EMPTY_WOBJ;
 }
 
+/*----------------------------*/
+// OTHERS
+/*----------------------------*/
 //assumes that the models have already been loaded into the VBO before this call
 void WorldObject::draw(Camera* cam, GLuint shaderProgram)
 {

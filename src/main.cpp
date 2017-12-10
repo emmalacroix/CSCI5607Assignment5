@@ -303,7 +303,7 @@ int main(int argc, char *argv[]) {
 
 		glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
 
-		glm::mat4 proj = glm::perspective(3.14f / 4, 800.0f / 600.0f, 0.1f, 1000.0f); //FOV, aspect, near, far
+		glm::mat4 proj = glm::perspective(3.14f / 4, 800.0f / 600.0f, 0.01f, 1000.0f); //FOV, aspect, near, far
 		glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
 
 		glActiveTexture(GL_TEXTURE0);
@@ -417,8 +417,6 @@ bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	float collision_radius = myWorld->getCollisionRadius();
 	WorldObject* front_obj = myWorld->checkCollision(pos + 0.5*collision_radius*dir);
 
-	Vec3D col_pos = temp_pos;
-
 	switch (event.keysym.sym)
 	{
 	/////////////////////////////////
@@ -427,22 +425,18 @@ bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	case SDLK_UP:
 		//printf("Up arrow pressed - step forward\n");
 		temp_pos = pos + (step_size*dir);
-		col_pos = temp_pos + collision_radius*dir;
 		break;
 	case SDLK_DOWN:
 		//printf("Down arrow pressed - step backward\n");
 		temp_pos = pos - (step_size*dir);
-		col_pos = temp_pos - collision_radius*dir;
 		break;
 	case SDLK_RIGHT:
 		//printf("Right arrow pressed - step to the right\n");
 		temp_pos = pos + (step_size*right);
-		col_pos = temp_pos + collision_radius*right;
 		break;
 	case SDLK_LEFT:
 		//printf("Left arrow pressed - step to the left\n");
 		temp_pos = pos - (step_size*right);
-		col_pos = temp_pos - collision_radius*right;
 		break;
 	////////////////////////////////
 	//TURNING WITH A/D KEYS		  //
@@ -497,13 +491,13 @@ bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		break;
 	}//END switch key press
 
-	//new dir and right aren't affected by collisions
+	//new dir, right, and up aren't affected by collisions
 	player->setDir(temp_dir);
 	player->setRight(temp_right);
 	player->setUp(temp_up);
 
 	//only set new pos if no collisions
-	WorldObject* collided_obj = myWorld->checkCollision(col_pos);
+	WorldObject* collided_obj = myWorld->checkCollision(temp_pos);
 
 	SDL_Event windowEvent;
 

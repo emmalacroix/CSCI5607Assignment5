@@ -59,11 +59,12 @@ public:
 	Material getMaterial();
 	Vec3D getSize();
 	int getLevel();
-	//OTHER
-
 
 	//VIRTUAL
 	virtual int getType();
+	//virtual Vec3D findIntersection(Vec3D pt, Vec3D dir);
+
+	//OTHER
 	void draw(Camera* cam, GLuint shaderProgram); //shared draw function among WObjs; WO_Portal has its own implementation
 
 };
