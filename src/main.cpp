@@ -56,6 +56,7 @@ string fragFile = "Shaders/phong.frag";
 ifstream checkSceneFile(char* fileName);
 SDL_Window* initSDL(SDL_GLContext& context);
 bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld);
+bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player);
 
 int main(int argc, char *argv[]) {
 	//used to for "speed" of character/camera
@@ -497,9 +498,19 @@ bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	player->setUp(temp_up);
 
 	//only set new pos if no collisions
-	WorldObject* collided_obj = myWorld->checkCollision(temp_pos);
+	if (!checkPosition(temp_pos, myWorld, player))
+	{
+		player->setPos(temp_pos);
+		return false;
+	}
+	return true;
+	
+}
+bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
+{
+	Vec3D pos = player->getPos();
 
-	SDL_Event windowEvent;
+	WorldObject* collided_obj = myWorld->checkCollision(temp_pos);
 
 	if (collided_obj != nullptr)
 	{
@@ -561,6 +572,7 @@ bool onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	{
 		temp_pos = pos;
 	}
-	player->setPos(temp_pos);
+
 	return false;
-}//END onKeyUp
+}
+//END onKeyUp

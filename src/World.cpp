@@ -101,7 +101,7 @@ WorldObject* World::getWO(Vec3D v)
 	float i = ((v.getX() - 0.5*cell_width) / cell_width) + 0.5;		//col #
 	float j = ((v.getZ() - 0.5*cell_width) / cell_width) + 0.5;		//row #
 	float k = ((v.getY() - 0.5*cell_width) / cell_width) + 0.5;		//level #
-	printf("getWO level %f indices : (%f , %f)\n", k, i, j);
+	//printf("getWO level %f indices : (%f , %f)\n", k, i, j);
 	return levels_array[(int)k][(int)j*width + (int)i];
 }
 
