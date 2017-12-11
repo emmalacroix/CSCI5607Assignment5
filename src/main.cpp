@@ -48,7 +48,7 @@ int screen_height = 600;
 //used for "speed" of character/camera
 const float cell_width = 1.0;
 const float step_size = 0.002f * cell_width;
-const float acceleration = 0.001f;
+const float acceleration = 0.002f;
 
 //shader globals
 string vertFile = "Shaders/phong.vert";
@@ -604,7 +604,7 @@ void updateForFalling(Character * player, World * myWorld)
 	Vec3D right = player->getRight();
 	Vec3D up = player->getUp();
 
-	Intersection under_sect = myWorld->checkCollision(pos + (-0.5*cell_width*up));
+	Intersection under_sect = myWorld->checkCollision(pos + (-0.1*up));
 	WorldObject* under_obj = under_sect.getObject();
 
 	if (under_obj != nullptr)
