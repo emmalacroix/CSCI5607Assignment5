@@ -37,6 +37,9 @@ public:
 	//Component-wise multiplication (dot product)
 	friend float dotProduct(const Vec3D& a, const Vec3D& b);
 
+	//Component-wise comparison operator
+	friend bool operator== (const Vec3D& a, const Vec3D& b);
+
 	//OTHERS
 	void normalize();
 	friend Vec3D cross(const Vec3D& a, const Vec3D& b);

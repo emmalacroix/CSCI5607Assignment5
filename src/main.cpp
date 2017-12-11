@@ -62,6 +62,7 @@ SDL_Window* initSDL(SDL_GLContext& context);
 void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld);
 bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player);
 bool updateCharacter(Character* player, World* myWorld);
+void updateForFalling(Character* player, World* myWorld);
 
 int main(int argc, char *argv[]) {
 	/////////////////////////////////
@@ -283,6 +284,7 @@ int main(int argc, char *argv[]) {
 			SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0); //Set to full screen
 		}//END polling if
 
+		updateForFalling(player, myWorld);
 		complete = updateCharacter(player, myWorld);
 
 		//after we figure out moving the Character - set the Camera params
@@ -593,4 +595,39 @@ bool updateCharacter(Character * player, World * myWorld)
 
 	//returns true if game is complete
 	return true;
+}
+
+void updateForFalling(Character * player, World * myWorld)
+{
+	Vec3D pos = player->getPos();
+	Vec3D dir = player->getDir();
+	Vec3D right = player->getRight();
+	Vec3D up = player->getUp();
+
+	Intersection under_sect = myWorld->checkCollision(pos + (-0.5*cell_width*up));
+	WorldObject* under_obj = under_sect.getObject();
+
+	if (under_obj != nullptr)
+	{
+		if (under_obj->getType() == EMPTY_WOBJ)
+		{
+			Vec3D vel = player->getVelocity();
+
+			//if they are parallel, then it was already falling
+			if (!(vel == Vec3D(0,0,0)) && (cross(vel, -1 * up) == Vec3D(0, 0, 0)))
+			{
+				player->setVelocity(-1 * (step_size + acceleration)*up);
+			}
+			else
+			{
+				player->setVelocity(-1 * step_size*up);
+			}
+		}
+		//if not Empty, don't change the velocity
+	}
+	else
+	{
+		//if null (probably floor?) don't move at all
+		player->setVelocity(Vec3D(0, 0, 0));
+	}
 }

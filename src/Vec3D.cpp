@@ -96,6 +96,18 @@ float dotProduct(const Vec3D & a, const Vec3D & b)
 	return a.x*b.x + a.y*b.y + a.z*b.z;
 }
 
+bool operator==(const Vec3D & a, const Vec3D & b)
+{
+	if (a.x == b.x &&
+		a.y == b.y &&
+		a.z == b.z)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 /*----------------------------*/
 // OTHERS
 /*----------------------------*/

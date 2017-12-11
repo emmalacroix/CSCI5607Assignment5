@@ -354,8 +354,11 @@ Intersection World::checkCollision(Vec3D pos)
 	//check if in bounds of the map
 	if (pos.getX() >= 0 &&
 		pos.getZ() >= 0 &&
+		pos.getY() >= 0 &&
 		pos.getX() < width*cell_width &&
-		pos.getZ() < height*cell_width)
+		pos.getZ() < height*cell_width &&
+		pos.getY() < num_levels*cell_width
+		)
 	{
 		iSect.setObject(getWO(pos));
 	}
