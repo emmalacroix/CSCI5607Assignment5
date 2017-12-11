@@ -543,7 +543,7 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 
 				if (player->hasKey(d_id))
 				{
-					printf("We have the right key (%c)!\n", d_id);
+					printf("We have the right key (%i)!\n", d_id);
 					door->unlock();
 				}
 
@@ -624,10 +624,5 @@ void updateForFalling(Character * player, World * myWorld)
 			}
 		}
 		//if not Empty, don't change the velocity
-	}
-	else
-	{
-		//if null (probably floor?) don't move at all
-		player->setVelocity(Vec3D(0, 0, 0));
 	}
 }
