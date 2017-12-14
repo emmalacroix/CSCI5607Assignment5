@@ -47,8 +47,14 @@ int screen_height = 600;
 
 //used for "speed" of character/camera
 const float cell_width = 1.0;
+
+#ifdef __APPLE__
+const float step_size = 0.2f * cell_width;
+const float acceleration = 0.2f;
+#else
 const float step_size = 0.002f * cell_width;
 const float acceleration = 0.002f;
+#endif
 
 //shader globals
 string vertFile = "Shaders/phong.vert";
