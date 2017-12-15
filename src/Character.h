@@ -23,6 +23,7 @@ private:
 
 	//used for updating
 	Vec3D vel_VEC;
+	int jump_start; //start time of most recent jump
 
 public:
 	//CONSTRUCTORS AND DESTRUCTORS
@@ -35,6 +36,7 @@ public:
 	void setUp(Vec3D c);
 	void setRight(Vec3D c);
 	void setVelocity(Vec3D v);
+	void setJumpStart(int s);
 
 	//GETTERS
 	Vec3D getPos();
@@ -44,6 +46,7 @@ public:
 	WorldObject* getCurItem();
 	void nextItem();
 	Vec3D getVelocity();
+	int getJumpStart();
 
 	//OTHERS
 	bool isInventoryEmpty();

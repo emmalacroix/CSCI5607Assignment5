@@ -48,9 +48,12 @@ int screen_height = 600;
 //used for "speed" of character/camera
 const float cell_width = 1.0;
 
+const int jump_duration = 1000; //in milliseconds
+const float jump_height = 1.0;
+
 #ifdef __APPLE__
-const float step_size = 0.2f * cell_width;
-const float acceleration = 0.2f;
+const float step_size = 0.006f * cell_width;
+const float acceleration = 0.006f;
 #else
 const float step_size = 0.002f * cell_width;
 const float acceleration = 0.002f;
@@ -66,9 +69,11 @@ string fragFile = "Shaders/phong.frag";
 ifstream checkSceneFile(char* fileName);
 SDL_Window* initSDL(SDL_GLContext& context);
 void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld);
+void mouseMove(SDL_MouseMotionEvent & event, Character* player, float horizontal_angle, float vertical_angle);
 bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player);
 bool updateCharacter(Character* player, World* myWorld);
 void updateForFalling(Character* player, World* myWorld);
+void updateForJumping(Character* player, World* myWorld);
 
 int main(int argc, char *argv[]) {
 	/////////////////////////////////
@@ -189,12 +194,20 @@ int main(int argc, char *argv[]) {
 	player->setPos(start_pos);						//start at the starting position
 	player->setUp(Vec3D(0, 1, 0));					//map is in xz plane
 	player->setRight(Vec3D(0, 0, 1));				//look along +x
+	player->setJumpStart(-jump_duration);			//not jumping at start of program
+
+	////////////////////////////////////////////////////
+	//MOUSE : keep track of angle the mouse has changed
+	//			player view through!
+	////////////////////////////////////////////////////
+	float horizontal_angle = 0;
+	float vertical_angle = 0;
 
 	/////////////////////////////////
 	//PORTALS
 	/////////////////////////////////
 	//testing testing
-	myWorld->movePortal1To(Vec3D(3.5,1,.9));
+	myWorld->movePortal1To(start_pos);
 
 	/////////////////////////////////
 	//BUILD VERTEX ARRAY OBJECT
@@ -265,10 +278,12 @@ int main(int argc, char *argv[]) {
 	SDL_Event windowEvent;
 	bool quit = false;
 	bool complete = false;
+	bool mouseActive = false;
+	bool recenterMouse = false;
 
 	while (!quit && !complete)
 	{
-		if (SDL_PollEvent(&windowEvent))
+		while (SDL_PollEvent(&windowEvent))
 		{
 			switch (windowEvent.type)
 			{
@@ -284,13 +299,29 @@ int main(int argc, char *argv[]) {
 					else if (windowEvent.key.keysym.sym == SDLK_f) fullscreen = !fullscreen;
 					onKeyDown(windowEvent.key, player, myWorld);
 					break;
+				case SDL_MOUSEMOTION:
+					if (mouseActive)
+					{
+						mouseMove(windowEvent.motion, player, horizontal_angle, vertical_angle);
+						recenterMouse = true;
+					} else {
+						SDL_WarpMouseInWindow(window, screen_width/2, screen_height/2);
+						mouseActive = true;
+					}
 				default:
 					break;
 			}//END polling switch
+
 			SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0); //Set to full screen
-		}//END polling if
+		}//END polling while
+
+		// if (recenterMouse)
+		// {
+		// 	SDL_WarpMouseInWindow(window, screen_width/2, screen_height/2);
+		// }
 
 		updateForFalling(player, myWorld);
+		updateForJumping(player, myWorld);
 		complete = updateCharacter(player, myWorld);
 
 		//after we figure out moving the Character - set the Camera params
@@ -414,6 +445,34 @@ ifstream checkSceneFile(char * fileName)
 }
 
 /*--------------------------------------------------------------*/
+// mouseMove : change player's direction if mouse is moved!
+/*--------------------------------------------------------------*/
+
+void mouseMove(SDL_MouseMotionEvent & event, Character* player, float horizontal_angle, float vertical_angle)
+{
+	Vec3D dir = player->getDir();
+	Vec3D right = player->getRight();
+	Vec3D up = player->getUp();
+
+	//temps to be modified
+	Vec3D temp_dir = dir;
+	Vec3D temp_right = right;
+	Vec3D temp_up = up;
+
+	horizontal_angle += 50 * step_size * float(screen_width/2 - event.x);
+	vertical_angle += 50 * step_size * float(screen_height/2 - event.y);
+
+	temp_dir = dir + (Vec3D(cos(vertical_angle) * sin(horizontal_angle), sin(vertical_angle), cos(vertical_angle) * cos(horizontal_angle)));
+	temp_right = right + (Vec3D(sin(horizontal_angle - 3.14f/2.0f), 0, cos(horizontal_angle - 3.14f/2.0f)));
+	temp_up = cross(temp_dir, -1 * temp_right);
+
+	player->setDir(temp_dir);
+	player->setRight(temp_right);
+	player->setUp(temp_up);	
+}
+
+
+/*--------------------------------------------------------------*/
 // onKeyDown : determine which key was pressed and how to edit
 //				current translation or rotation parameters
 /*--------------------------------------------------------------*/
@@ -440,19 +499,19 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	/////////////////////////////////
 	case SDLK_UP:
 		//printf("Up arrow pressed - step forward\n");
-		player->setVelocity(step_size*dir);
+		player->setVelocity(Vec3D(step_size*dir.getX(), 0, step_size*dir.getZ()));
 		break;
 	case SDLK_DOWN:
 		//printf("Down arrow pressed - step backward\n");
-		player->setVelocity(-1*step_size*dir);
+		player->setVelocity(Vec3D(-1*step_size*dir.getX(), 0, -1*step_size*dir.getZ()));
 		break;
 	case SDLK_RIGHT:
 		//printf("Right arrow pressed - step to the right\n");
-		player->setVelocity(step_size*right);
+		player->setVelocity(Vec3D(step_size*right.getX(), 0, step_size*right.getZ()));
 		break;
 	case SDLK_LEFT:
 		//printf("Left arrow pressed - step to the left\n");
-		player->setVelocity(-1*step_size*right);
+		player->setVelocity(Vec3D(-1*step_size*right.getX(), 0, -1*step_size*right.getZ()));
 		break;
 	////////////////////////////////
 	//TURNING WITH A/D KEYS		  //
@@ -481,9 +540,37 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		temp_up = cross(right, temp_dir); //calc new up using new dir
 		break;
 	////////////////////////////////
-	//SPACEBAR PRESS			  //
+	//JUMP WITH SPACEBAR		  //
 	////////////////////////////////
 	case SDLK_SPACE:
+	{
+		int time = SDL_GetTicks();
+		if (time - player->getJumpStart() > jump_duration)
+		//we are not already jumping
+		{
+			player->setJumpStart(time);
+		}
+		break;
+	}
+
+	////////////////////////////////
+	//SHOOT PORTAL GUN WITH ???   //
+	////////////////////////////////
+	// case SDLK_SPACE:
+	// {
+	// 	bool collided = false;
+	// 	float t = test_increment;
+	// 	while (!collided && t < shooting_range){
+	// 		if 
+
+	// 		t += test_increment;
+	// 	}
+	// }
+
+	////////////////////////////////
+	//PICK UP ITEM WITH E		  //
+	////////////////////////////////
+	case SDLK_e:
 	{
 		//see what's in front of us
 		if (front_obj->getType() == KEY_WOBJ)
@@ -591,6 +678,7 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 
 bool updateCharacter(Character * player, World * myWorld)
 {
+
 	Vec3D temp_pos = player->getPos() + player->getVelocity();
 
 	if (!checkPosition(temp_pos, myWorld, player))
@@ -605,30 +693,62 @@ bool updateCharacter(Character * player, World * myWorld)
 
 void updateForFalling(Character * player, World * myWorld)
 {
-	Vec3D pos = player->getPos();
-	Vec3D dir = player->getDir();
-	Vec3D right = player->getRight();
-	Vec3D up = player->getUp();
-
-	Intersection under_sect = myWorld->checkCollision(pos + (-0.1*up));
-	WorldObject* under_obj = under_sect.getObject();
-
-	if (under_obj != nullptr)
+	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
+	if (t >= jump_duration)
 	{
-		if (under_obj->getType() == EMPTY_WOBJ)
-		{
-			Vec3D vel = player->getVelocity();
+		Vec3D pos = player->getPos();
+		Vec3D dir = player->getDir();
+		Vec3D right = player->getRight();
+		Vec3D up = player->getUp();
 
-			//if they are parallel, then it was already falling
-			if (!(vel == Vec3D(0,0,0)) && (cross(vel, -1 * up) == Vec3D(0, 0, 0)))
+		Intersection under_sect = myWorld->checkCollision(pos + (-0.1*up));
+		WorldObject* under_obj = under_sect.getObject();
+
+		if (under_obj != nullptr)
+		{
+			if (under_obj->getType() == EMPTY_WOBJ || under_obj->getType() == KEY_WOBJ)
 			{
-				player->setVelocity(-1 * (step_size + acceleration)*up);
+				Vec3D vel = player->getVelocity();
+				Vec3D down = Vec3D(0,-1,0);
+
+				//if they are parallel, then it was already falling
+				if (!(vel == Vec3D(0,0,0)) && (cross(vel, -1 * up) == Vec3D(0, 0, 0)))
+				{
+					player->setVelocity((step_size + acceleration)*down);
+				}
+				else
+				{
+					player->setVelocity(step_size*down);
+				}
 			}
-			else
-			{
-				player->setVelocity(-1 * step_size*up);
-			}
+			//if not Empty, don't change the velocity
 		}
-		//if not Empty, don't change the velocity
+	}
+}
+
+void updateForJumping(Character* player, World* myWorld)
+{
+	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
+	cout << "t is " << t << endl;
+	if (t < jump_duration) //it has been less than jump_duration ms since jump started
+	{
+		Vec3D pos = player->getPos();
+		Vec3D dir = player->getDir();
+		Vec3D right = player->getRight();
+		Vec3D up = player->getUp();
+		
+		Intersection above_sect = myWorld->checkCollision(pos + 0.1*up);
+		WorldObject* above_obj = above_sect.getObject();
+
+		if (above_obj != nullptr)
+		{
+			if (above_obj->getType() == EMPTY_WOBJ || above_obj->getType() == KEY_WOBJ)
+			{
+				Vec3D vel = player->getVelocity();
+				float x = (float)t/(float)jump_duration;
+				float y = 4-8*x; //derivative of y=-(1/4)*(4x-2)^2+1 (nicely arched jump parabola)
+				player->setVelocity(Vec3D(fabs(y)*jump_height*step_size*up.getX(), y*jump_height*step_size*up.getY(), fabs(y)*jump_height*step_size*up.getZ()));
+			}
+		}	
 	}
 }

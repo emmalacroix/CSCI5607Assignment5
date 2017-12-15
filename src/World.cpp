@@ -270,7 +270,7 @@ bool World::parseFile(ifstream & input)
 	mat1.setSpecular(glm::vec3(0, 0, 0));
 
 	portal1->setMaterial(mat1);
-	portal1->setSize(Vec3D(cell_width, 2*cell_width, 0.01)); //xy plane
+	portal1->setSize(Vec3D(cell_width/3, cell_width/3, 0.01)); //xy plane
 
 	//portal #2
 	portal2 = new WO_Portal();
@@ -283,7 +283,7 @@ bool World::parseFile(ifstream & input)
 	mat2.setSpecular(glm::vec3(0, 0, 0));
 
 	portal2->setMaterial(mat2);
-	portal2->setSize(Vec3D(cell_width, 2*cell_width, 0.01)); //xy plane
+	portal2->setSize(Vec3D(cell_width/3, cell_width/3, 0.01)); //xy plane
 	
 	return true;
 }

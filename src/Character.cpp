@@ -56,6 +56,11 @@ void Character::setVelocity(Vec3D v)
 	vel_VEC = v;
 }
 
+void Character::setJumpStart(int s)
+{
+	jump_start = s;
+}
+
 /*----------------------------*/
 // GETTERS
 /*----------------------------*/
@@ -107,6 +112,11 @@ void Character::nextItem()
 Vec3D Character::getVelocity()
 {
 	return vel_VEC;
+}
+
+int Character::getJumpStart()
+{
+	return jump_start;
 }
 
 /*----------------------------*/
