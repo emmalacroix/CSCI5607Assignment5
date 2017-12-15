@@ -50,6 +50,10 @@ const float cell_width = 1.0;
 const float step_size = 0.002f * cell_width;
 const float acceleration = 0.002f;
 
+//used for determining placement of portal
+const float test_increment = 0.01f * cell_width;
+const float shooting_range = 10 * cell_width;
+
 //shader globals
 string vertFile = "Shaders/phong.vert";
 string fragFile = "Shaders/phong.frag";
@@ -60,6 +64,7 @@ string fragFile = "Shaders/phong.frag";
 ifstream checkSceneFile(char* fileName);
 SDL_Window* initSDL(SDL_GLContext& context);
 void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld);
+void mouseMove(SDL_MouseMotionEvent & event, Character* player, float horizontal_angle, float vertical_angle);
 bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player);
 bool updateCharacter(Character* player, World* myWorld);
 void updateForFalling(Character* player, World* myWorld);
@@ -184,11 +189,18 @@ int main(int argc, char *argv[]) {
 	player->setUp(Vec3D(0, 1, 0));					//map is in xz plane
 	player->setRight(Vec3D(0, 0, 1));				//look along +x
 
+	////////////////////////////////////////////////////
+	//MOUSE : keep track of angle the mouse has changed
+	//			player view through!
+	////////////////////////////////////////////////////
+	float horizontal_angle = 0;
+	float vertical_angle = 0;
+
 	/////////////////////////////////
 	//PORTALS
 	/////////////////////////////////
 	//testing testing
-	myWorld->movePortal1To(Vec3D(3.5,1,.9));
+	myWorld->movePortal1To(start_pos);
 
 	/////////////////////////////////
 	//BUILD VERTEX ARRAY OBJECT
@@ -259,10 +271,12 @@ int main(int argc, char *argv[]) {
 	SDL_Event windowEvent;
 	bool quit = false;
 	bool complete = false;
+	bool mouseActive = false;
+	bool recenterMouse = false;
 
 	while (!quit && !complete)
 	{
-		if (SDL_PollEvent(&windowEvent))
+		while (SDL_PollEvent(&windowEvent))
 		{
 			switch (windowEvent.type)
 			{
@@ -278,11 +292,26 @@ int main(int argc, char *argv[]) {
 					else if (windowEvent.key.keysym.sym == SDLK_f) fullscreen = !fullscreen;
 					onKeyDown(windowEvent.key, player, myWorld);
 					break;
+				case SDL_MOUSEMOTION:
+					if (mouseActive)
+					{
+						mouseMove(windowEvent.motion, player, horizontal_angle, vertical_angle);
+						recenterMouse = true;
+					} else {
+						SDL_WarpMouseInWindow(window, screen_width/2, screen_height/2);
+						mouseActive = true;
+					}
 				default:
 					break;
 			}//END polling switch
+
 			SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0); //Set to full screen
-		}//END polling if
+		}//END polling while
+
+		// if (recenterMouse)
+		// {
+		// 	SDL_WarpMouseInWindow(window, screen_width/2, screen_height/2);
+		// }
 
 		updateForFalling(player, myWorld);
 		complete = updateCharacter(player, myWorld);
@@ -408,6 +437,34 @@ ifstream checkSceneFile(char * fileName)
 }
 
 /*--------------------------------------------------------------*/
+// mouseMove : change player's direction if mouse is moved!
+/*--------------------------------------------------------------*/
+
+void mouseMove(SDL_MouseMotionEvent & event, Character* player, float horizontal_angle, float vertical_angle)
+{
+	Vec3D dir = player->getDir();
+	Vec3D right = player->getRight();
+	Vec3D up = player->getUp();
+
+	//temps to be modified
+	Vec3D temp_dir = dir;
+	Vec3D temp_right = right;
+	Vec3D temp_up = up;
+
+	horizontal_angle += 50 * step_size * float(screen_width/2 - event.x);
+	vertical_angle += 50 * step_size * float(screen_height/2 - event.y);
+
+	temp_dir = dir + (Vec3D(cos(vertical_angle) * sin(horizontal_angle), sin(vertical_angle), cos(vertical_angle) * cos(horizontal_angle)));
+	temp_right = right + (Vec3D(sin(horizontal_angle - 3.14f/2.0f), 0, cos(horizontal_angle - 3.14f/2.0f)));
+	temp_up = cross(temp_dir, -1 * temp_right);
+
+	player->setDir(temp_dir);
+	player->setRight(temp_right);
+	player->setUp(temp_up);	
+}
+
+
+/*--------------------------------------------------------------*/
 // onKeyDown : determine which key was pressed and how to edit
 //				current translation or rotation parameters
 /*--------------------------------------------------------------*/
@@ -475,9 +532,23 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		temp_up = cross(right, temp_dir); //calc new up using new dir
 		break;
 	////////////////////////////////
-	//SPACEBAR PRESS			  //
+	//SHOOT PORTAL GUN WITH SPACE //
 	////////////////////////////////
-	case SDLK_SPACE:
+	// case SDLK_SPACE:
+	// {
+	// 	bool collided = false;
+	// 	float t = test_increment;
+	// 	while (!collided && t < shooting_range){
+	// 		if 
+
+	// 		t += test_increment;
+	// 	}
+	// }
+
+	////////////////////////////////
+	//PICK UP ITEM WITH E		  //
+	////////////////////////////////
+	case SDLK_e:
 	{
 		//see what's in front of us
 		if (front_obj->getType() == KEY_WOBJ)
