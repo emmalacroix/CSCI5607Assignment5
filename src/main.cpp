@@ -49,6 +49,7 @@ int screen_height = 600;
 const float cell_width = 1.0;
 const float step_size = 0.002f * cell_width;
 const float acceleration = 0.002f;
+const int jump_duration = 2000; //in milliseconds
 
 //used for determining placement of portal
 const float test_increment = 0.01f * cell_width;
@@ -68,6 +69,7 @@ void mouseMove(SDL_MouseMotionEvent & event, Character* player, float horizontal
 bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player);
 bool updateCharacter(Character* player, World* myWorld);
 void updateForFalling(Character* player, World* myWorld);
+void updateForJumping(Character* player, World* myWorld);
 
 int main(int argc, char *argv[]) {
 	/////////////////////////////////
@@ -188,6 +190,7 @@ int main(int argc, char *argv[]) {
 	player->setPos(start_pos);						//start at the starting position
 	player->setUp(Vec3D(0, 1, 0));					//map is in xz plane
 	player->setRight(Vec3D(0, 0, 1));				//look along +x
+	player->setJumpStart(-jump_duration);			//not jumping at start of program
 
 	////////////////////////////////////////////////////
 	//MOUSE : keep track of angle the mouse has changed
@@ -314,6 +317,7 @@ int main(int argc, char *argv[]) {
 		// }
 
 		updateForFalling(player, myWorld);
+		updateForJumping(player, myWorld);
 		complete = updateCharacter(player, myWorld);
 
 		//after we figure out moving the Character - set the Camera params
@@ -532,7 +536,16 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		temp_up = cross(right, temp_dir); //calc new up using new dir
 		break;
 	////////////////////////////////
-	//SHOOT PORTAL GUN WITH SPACE //
+	//JUMP WITH SPACEBAR		  //
+	////////////////////////////////
+	case SDLK_SPACE:
+	{
+		player->setJumpStart(SDL_GetTicks());
+		break;
+	}
+
+	////////////////////////////////
+	//SHOOT PORTAL GUN WITH ???   //
 	////////////////////////////////
 	// case SDLK_SPACE:
 	// {
@@ -670,30 +683,70 @@ bool updateCharacter(Character * player, World * myWorld)
 
 void updateForFalling(Character * player, World * myWorld)
 {
-	Vec3D pos = player->getPos();
-	Vec3D dir = player->getDir();
-	Vec3D right = player->getRight();
-	Vec3D up = player->getUp();
-
-	Intersection under_sect = myWorld->checkCollision(pos + (-0.1*up));
-	WorldObject* under_obj = under_sect.getObject();
-
-	if (under_obj != nullptr)
+	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
+	if (t >= jump_duration)
 	{
-		if (under_obj->getType() == EMPTY_WOBJ)
-		{
-			Vec3D vel = player->getVelocity();
+		Vec3D pos = player->getPos();
+		Vec3D dir = player->getDir();
+		Vec3D right = player->getRight();
+		Vec3D up = player->getUp();
 
-			//if they are parallel, then it was already falling
-			if (!(vel == Vec3D(0,0,0)) && (cross(vel, -1 * up) == Vec3D(0, 0, 0)))
+		Intersection under_sect = myWorld->checkCollision(pos + (-0.1*up));
+		WorldObject* under_obj = under_sect.getObject();
+
+		if (under_obj != nullptr)
+		{
+			if (under_obj->getType() == EMPTY_WOBJ)
 			{
-				player->setVelocity(-1 * (step_size + acceleration)*up);
+				Vec3D vel = player->getVelocity();
+				Vec3D down = Vec3D(0,-1,0);
+
+				//if they are parallel, then it was already falling
+				if (!(vel == Vec3D(0,0,0)) && (cross(vel, -1 * up) == Vec3D(0, 0, 0)))
+				{
+					player->setVelocity((step_size + acceleration)*down);
+				}
+				else
+				{
+					player->setVelocity(step_size*down);
+				}
 			}
-			else
-			{
-				player->setVelocity(-1 * step_size*up);
-			}
+			//if not Empty, don't change the velocity
 		}
-		//if not Empty, don't change the velocity
+	}
+}
+
+void updateForJumping(Character* player, World* myWorld)
+{
+	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
+	cout << "t is " << t << endl;
+	if (t < jump_duration/2) //it has been less than jump_duration ms since jump started
+	{
+		//if (player->getVelocity().getY() != 0)
+		//if we're not already jumping or falling
+		//{
+			Vec3D pos = player->getPos();
+			Vec3D dir = player->getDir();
+			Vec3D right = player->getRight();
+			Vec3D up = player->getUp();
+
+			//if (dotProduct(Vec3D(0,1,0), up) >= 0)
+			//make sure we're jumping in the +y direction
+			//{
+				Intersection above_sect = myWorld->checkCollision(pos + 0.1*up);
+				WorldObject* above_obj = above_sect.getObject();
+
+				if (above_obj != nullptr)
+				{
+					//if (above_obj->getType() == EMPTY_WOBJ)
+					//{
+						Vec3D vel = player->getVelocity();
+						player->setVelocity(vel + (1/2-(float)t/(float)jump_duration)*step_size*up);
+					//} //else {
+						//player->setJumpStart(-jump_duration); //sets it so we are done jumping if we hit a ceiling/etc.
+					//}
+				}
+			//}
+		//}
 	}
 }
