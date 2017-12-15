@@ -495,28 +495,28 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	switch (event.keysym.sym)
 	{
 	/////////////////////////////////
-	//TRANSLATION WITH ARROW KEYS  //
+	//TRANSLATION WITH WASD
 	/////////////////////////////////
-	case SDLK_UP:
+	case SDLK_w:
 		//printf("Up arrow pressed - step forward\n");
 		player->setVelocity(Vec3D(step_size*dir.getX(), 0, step_size*dir.getZ()));
 		break;
-	case SDLK_DOWN:
+	case SDLK_s:
 		//printf("Down arrow pressed - step backward\n");
 		player->setVelocity(Vec3D(-1*step_size*dir.getX(), 0, -1*step_size*dir.getZ()));
 		break;
-	case SDLK_RIGHT:
+	case SDLK_d:
 		//printf("Right arrow pressed - step to the right\n");
 		player->setVelocity(Vec3D(step_size*right.getX(), 0, step_size*right.getZ()));
 		break;
-	case SDLK_LEFT:
+	case SDLK_a:
 		//printf("Left arrow pressed - step to the left\n");
 		player->setVelocity(Vec3D(-1*step_size*right.getX(), 0, -1*step_size*right.getZ()));
 		break;
 	////////////////////////////////
 	//TURNING WITH A/D KEYS		  //
 	////////////////////////////////
-	case SDLK_d:
+	/*case SDLK_d:
 		//printf("D key pressed - turn to the right\n");
 		temp_dir = dir + (50*step_size*right);
 		temp_right = cross(temp_dir, up); //calc new right using new dir
@@ -525,11 +525,11 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		//printf("A key pressed - turn to the left\n");
 		temp_dir = dir - (50*step_size*right);
 		temp_right = cross(temp_dir, up); //calc new right using new dir
-		break;
+		break;*/
 	////////////////////////////////
 	//TILTING WITH W/S KEYS		  //
 	////////////////////////////////
-	case SDLK_w:
+	/*case SDLK_w:
 		//printf("W key pressed - tilt up\n");
 		temp_dir = dir + (50*step_size*up);
 		temp_up = cross(right, temp_dir); //calc new up using new dir
@@ -538,7 +538,7 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		//printf("S key pressed - tilt down\n");
 		temp_dir = dir - (50*step_size*up);
 		temp_up = cross(right, temp_dir); //calc new up using new dir
-		break;
+		break;*/
 	////////////////////////////////
 	//JUMP WITH SPACEBAR		  //
 	////////////////////////////////
