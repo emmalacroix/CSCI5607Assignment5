@@ -49,7 +49,7 @@ int screen_height = 600;
 const float cell_width = 1.0;
 const float step_size = 0.002f * cell_width;
 const float acceleration = 0.002f;
-const int jump_duration = 2000; //in milliseconds
+const int jump_duration = 1000; //in milliseconds
 
 //used for determining placement of portal
 const float test_increment = 0.01f * cell_width;
@@ -540,7 +540,11 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	////////////////////////////////
 	case SDLK_SPACE:
 	{
-		player->setJumpStart(SDL_GetTicks());
+		int time = SDL_GetTicks();
+		if (time - player->getJumpStart() > jump_duration)
+		{
+			player->setJumpStart(time);
+		}
 		break;
 	}
 
@@ -669,6 +673,7 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 
 bool updateCharacter(Character * player, World * myWorld)
 {
+
 	Vec3D temp_pos = player->getPos() + player->getVelocity();
 
 	if (!checkPosition(temp_pos, myWorld, player))
@@ -720,7 +725,7 @@ void updateForJumping(Character* player, World* myWorld)
 {
 	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
 	cout << "t is " << t << endl;
-	if (t < jump_duration/2) //it has been less than jump_duration ms since jump started
+	if (t < jump_duration) //it has been less than jump_duration ms since jump started
 	{
 		//if (player->getVelocity().getY() != 0)
 		//if we're not already jumping or falling
@@ -741,7 +746,10 @@ void updateForJumping(Character* player, World* myWorld)
 					//if (above_obj->getType() == EMPTY_WOBJ)
 					//{
 						Vec3D vel = player->getVelocity();
-						player->setVelocity(vel + (1/2-(float)t/(float)jump_duration)*step_size*up);
+						float x = (float)t/(float)jump_duration;
+						//float y = -1*pow(4*x-2,2)+4;
+						float y = 16-32*x;
+						player->setVelocity(y*step_size*up);
 					//} //else {
 						//player->setJumpStart(-jump_duration); //sets it so we are done jumping if we hit a ceiling/etc.
 					//}
