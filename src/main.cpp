@@ -47,9 +47,16 @@ int screen_height = 600;
 
 //used for "speed" of character/camera
 const float cell_width = 1.0;
+const int jump_duration = 1000; //in milliseconds
+const float jump_height = 1.0;
+
+#ifdef __APPLE__
+const float step_size = 0.006f * cell_width;
+const float acceleration = 0.006f;
+#else
 const float step_size = 0.002f * cell_width;
 const float acceleration = 0.002f;
-const int jump_duration = 1000; //in milliseconds
+#endif
 
 //used for determining placement of portal
 const float test_increment = 0.01f * cell_width;
@@ -495,19 +502,19 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	/////////////////////////////////
 	case SDLK_UP:
 		//printf("Up arrow pressed - step forward\n");
-		player->setVelocity(step_size*dir);
+		player->setVelocity(Vec3D(step_size*dir.getX(), 0, step_size*dir.getZ()));
 		break;
 	case SDLK_DOWN:
 		//printf("Down arrow pressed - step backward\n");
-		player->setVelocity(-1*step_size*dir);
+		player->setVelocity(Vec3D(-1*step_size*dir.getX(), 0, -1*step_size*dir.getZ()));
 		break;
 	case SDLK_RIGHT:
 		//printf("Right arrow pressed - step to the right\n");
-		player->setVelocity(step_size*right);
+		player->setVelocity(Vec3D(step_size*right.getX(), 0, step_size*right.getZ()));
 		break;
 	case SDLK_LEFT:
 		//printf("Left arrow pressed - step to the left\n");
-		player->setVelocity(-1*step_size*right);
+		player->setVelocity(Vec3D(-1*step_size*right.getX(), 0, -1*step_size*right.getZ()));
 		break;
 	////////////////////////////////
 	//TURNING WITH A/D KEYS		  //
@@ -542,6 +549,7 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	{
 		int time = SDL_GetTicks();
 		if (time - player->getJumpStart() > jump_duration)
+		//we are not already jumping
 		{
 			player->setJumpStart(time);
 		}
@@ -701,7 +709,7 @@ void updateForFalling(Character * player, World * myWorld)
 
 		if (under_obj != nullptr)
 		{
-			if (under_obj->getType() == EMPTY_WOBJ)
+			if (under_obj->getType() == EMPTY_WOBJ || under_obj->getType() == KEY_WOBJ)
 			{
 				Vec3D vel = player->getVelocity();
 				Vec3D down = Vec3D(0,-1,0);
@@ -727,34 +735,23 @@ void updateForJumping(Character* player, World* myWorld)
 	cout << "t is " << t << endl;
 	if (t < jump_duration) //it has been less than jump_duration ms since jump started
 	{
-		//if (player->getVelocity().getY() != 0)
-		//if we're not already jumping or falling
-		//{
-			Vec3D pos = player->getPos();
-			Vec3D dir = player->getDir();
-			Vec3D right = player->getRight();
-			Vec3D up = player->getUp();
+		Vec3D pos = player->getPos();
+		Vec3D dir = player->getDir();
+		Vec3D right = player->getRight();
+		Vec3D up = player->getUp();
+		
+		Intersection above_sect = myWorld->checkCollision(pos + 0.1*up);
+		WorldObject* above_obj = above_sect.getObject();
 
-			//if (dotProduct(Vec3D(0,1,0), up) >= 0)
-			//make sure we're jumping in the +y direction
-			//{
-				Intersection above_sect = myWorld->checkCollision(pos + 0.1*up);
-				WorldObject* above_obj = above_sect.getObject();
-
-				if (above_obj != nullptr)
-				{
-					//if (above_obj->getType() == EMPTY_WOBJ)
-					//{
-						Vec3D vel = player->getVelocity();
-						float x = (float)t/(float)jump_duration;
-						//float y = -1*pow(4*x-2,2)+4;
-						float y = 16-32*x;
-						player->setVelocity(y*step_size*up);
-					//} //else {
-						//player->setJumpStart(-jump_duration); //sets it so we are done jumping if we hit a ceiling/etc.
-					//}
-				}
-			//}
-		//}
+		if (above_obj != nullptr)
+		{
+			if (above_obj->getType() == EMPTY_WOBJ || above_obj->getType() == KEY_WOBJ)
+			{
+				Vec3D vel = player->getVelocity();
+				float x = (float)t/(float)jump_duration;
+				float y = 4-8*x; //derivative of y=-(1/4)*(4x-2)^2+1 (nicely arched jump parabola)
+				player->setVelocity(Vec3D(fabs(y)*jump_height*step_size*up.getX(), y*jump_height*step_size*up.getY(), fabs(y)*jump_height*step_size*up.getZ()));
+			}
+		}	
 	}
 }
