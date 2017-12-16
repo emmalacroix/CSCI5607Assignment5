@@ -12,7 +12,6 @@
 #include "Camera.h"
 #include "Util.h"
 #include "Intersection.h"
-#include "PortalShot.h"
 
 //WorldObject classes
 #include "WorldObject.h"
@@ -22,6 +21,7 @@
 #include "WO_Start.h"
 #include "WO_Wall.h"
 #include "WO_Portal.h"
+#include "WO_PortalShot.h"
 
 class World{
 private:
@@ -35,7 +35,7 @@ private:
 	WorldObject* floor;
 	WO_Portal* portal1;
 	WO_Portal* portal2;
-	PortalShot* shot;
+	WO_PortalShot* shot;
 	float collision_radius;
 	float open_speed;
 
@@ -80,6 +80,9 @@ public:
 	int getHeight();
 	float getCellWidth();
 	WorldObject* getWO(Vec3D v);
+	WO_Portal* getPortal1();
+	WO_Portal* getPortal2();
+	WO_PortalShot* getShot();
 	Vec3D getWorldPosition(Coord2D c, int level);
 	Vec3D getStartWorldPosition();
 	float getCollisionRadius();

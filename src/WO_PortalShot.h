@@ -1,34 +1,36 @@
 #ifndef PORTALSHOT_INCLUDED
 #define PORTALSHOT_INCLUDED
 
-#include "Vec3D.h"
 #include "WorldObject.h"
 
-class PortalShot
+class WO_PortalShot : public WorldObject
 {
 private:
 	int start_time;
-	Vec3D pos;
+	Vec3D start_pos;
 	Vec3D dir;
 	WorldObject* portal;
 	bool active;
 
 public:
 	//CONSTRUCTORS AND DESTRUCTORS
-	PortalShot();
-	~PortalShot();
+	WO_PortalShot();
+	~WO_PortalShot();
 
 	//SETTERS
 	void setStartTime(int t);
-	void setPos(Vec3D p);
+	void setStartPos(Vec3D p);
 	void setDir(Vec3D d);
 	void setPortal(WorldObject* port);
 
 	//GETTERS
 	int getStartTime();
-	Vec3D getPos();
+	Vec3D getStartPos();
 	Vec3D getDir();
 	WorldObject* getPortal();
+
+	//VIRTUAL
+	int getType();
 
 	//OTHERS
 	void beginShot();

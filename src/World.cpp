@@ -29,6 +29,7 @@ World::~World()
 	delete floor;
 	delete portal1;
 	delete portal2;
+	delete shot;
 
 	//delete each row of each level
 	for (int i = 0; i < num_levels; i++)
@@ -102,6 +103,21 @@ WorldObject* World::getWO(Vec3D v)
 	float k = ((v.getY() - 0.5*cell_width) / cell_width) + 0.5;		//level #
 	//printf("getWO level %f indices : (%f , %f)\n", k, i, j);
 	return levels_array[(int)k][(int)j*width + (int)i];
+}
+
+WO_Portal* World::getPortal1()
+{
+	return portal1;
+}
+
+WO_Portal* World::getPortal2()
+{
+	return portal2;
+}
+
+WO_PortalShot* World::getShot()
+{
+	return shot;
 }
 
 //map lies in xz plane
@@ -284,6 +300,12 @@ bool World::parseFile(ifstream & input)
 	portal2->setMaterial(mat2);
 	portal2->setSize(Vec3D(cell_width/3, cell_width/3, 0.01)); //xy plane
 	
+	//initialize portal shot
+	shot = new WO_PortalShot();
+	shot->setVertStartIndex(SPHERE_START);
+	shot->setTotalVertices(SPHERE_VERTS);
+	shot->setSize(Vec3D(0.1, 0.1, 0.1));
+
 	return true;
 }
 
@@ -338,8 +360,14 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 		}//END row/col for loop
 	}//END levels for loop
 
-	glUniform1i(uniTexID, 1); //Set texture ID to use for floor (1 = brick texture)
+	glUniform1i(uniTexID, 1); //Set texture ID to use for floor (1 = metal floor)
 	floor->draw(cam, shaderProgram);
+
+	glUniform1i(uniTexID, -1); //Set texture ID to use for floor (-1 = no texture)
+	if (shot->shooting())
+	{
+		shot->draw(cam, shaderProgram);
+	}
 
 	if (portal1->doesExist() && portal2->doesExist())
 	{
@@ -517,16 +545,12 @@ void World::movePortal2(Vec3D pos)
 	portal2->moveTo(pos);
 }
 
-// void World::movePortal2To(Vec3D pos)
-// {
-// 	//WO_Portal* portal = (WO_Portal*)portal2;
-// 	portal->moveTo(pos);
-// }
-
 void World::shootPortal(Vec3D pos, Vec3D dir, int time, WO_Portal* portal)
 {
 	shot->beginShot();
 	shot->setStartTime(time);
-	shot->setPos(pos);
+	shot->setStartPos(pos);
+	shot->setWPosition(pos);
 	shot->setDir(dir);
+	shot->setMaterial(portal->getMaterial());
 }
