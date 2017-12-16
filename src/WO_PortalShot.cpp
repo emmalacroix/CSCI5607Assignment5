@@ -38,7 +38,7 @@ void WO_PortalShot::setDir(Vec3D d)
 	dir = d;
 }
 
-void WO_PortalShot::setPortal(WorldObject* port)
+void WO_PortalShot::setPortal(WO_Portal* port)
 {
 	portal = port;
 }
@@ -61,7 +61,7 @@ Vec3D WO_PortalShot::getDir()
 	return dir;
 }
 
-WorldObject * WO_PortalShot::getPortal()
+WO_Portal * WO_PortalShot::getPortal()
 {
 	return portal;
 }

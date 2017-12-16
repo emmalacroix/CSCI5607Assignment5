@@ -75,7 +75,7 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player);
 bool updateCharacter(Character* player, World* myWorld);
 void updateForFalling(Character* player, World* myWorld);
 void updateForJumping(Character* player, World* myWorld);
-void updatePortalShot(WO_PortalShot* shot, World* myWorld, int time);
+void updatePortalShot(WO_PortalShot* shot, int time);
 
 int main(int argc, char *argv[]) {
 	/////////////////////////////////
@@ -209,7 +209,7 @@ int main(int argc, char *argv[]) {
 	//PORTALS
 	/////////////////////////////////
 	//testing testing
-	myWorld->movePortal1(start_pos);
+	myWorld->movePortal(myWorld->getPortal1(), start_pos);
 
 	/////////////////////////////////
 	//BUILD VERTEX ARRAY OBJECT
@@ -330,7 +330,18 @@ int main(int argc, char *argv[]) {
 		// 	SDL_WarpMouseInWindow(window, screen_width/2, screen_height/2);
 		// }
 
-		updatePortalShot(myWorld->getShot(), myWorld, SDL_GetTicks());
+		if (myWorld->getShot()->shooting())
+		{
+			updatePortalShot(myWorld->getShot(), SDL_GetTicks());
+			// Vec3D front_pos = myWorld->getShot()->getWPosition() + 0.5*myWorld->getCollisionRadius()*myWorld->getShot()->getDir();
+			// Intersection iSect = myWorld->checkCollision(front_pos);
+			// if (iSect.getObject()->getType() == WALL_WOBJ)
+			// {
+			// 	myWorld->movePortal(myWorld->getShot()->getPortal(), myWorld->getShot()->getWPosition());
+			// 	myWorld->getShot()->ceaseShot();
+			// }
+		}
+
 		updateForFalling(player, myWorld);
 		updateForJumping(player, myWorld);
 		complete = updateCharacter(player, myWorld);
@@ -762,7 +773,7 @@ void updateForJumping(Character* player, World* myWorld)
 	}
 }
 
-void updatePortalShot(WO_PortalShot* shot, World* myWorld, int time)
+void updatePortalShot(WO_PortalShot* shot, int time)
 {
 	int t = time - shot->getStartTime(); //time since shot was fired
 	Vec3D new_pos = shot->getStartPos() + t*step_size*shot->getDir();

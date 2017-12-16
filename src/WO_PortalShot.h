@@ -2,6 +2,7 @@
 #define PORTALSHOT_INCLUDED
 
 #include "WorldObject.h"
+#include "WO_Portal.h"
 
 class WO_PortalShot : public WorldObject
 {
@@ -9,7 +10,7 @@ private:
 	int start_time;
 	Vec3D start_pos;
 	Vec3D dir;
-	WorldObject* portal;
+	WO_Portal* portal;
 	bool active;
 
 public:
@@ -21,13 +22,13 @@ public:
 	void setStartTime(int t);
 	void setStartPos(Vec3D p);
 	void setDir(Vec3D d);
-	void setPortal(WorldObject* port);
+	void setPortal(WO_Portal* port);
 
 	//GETTERS
 	int getStartTime();
 	Vec3D getStartPos();
 	Vec3D getDir();
-	WorldObject* getPortal();
+	WO_Portal* getPortal();
 
 	//VIRTUAL
 	int getType();

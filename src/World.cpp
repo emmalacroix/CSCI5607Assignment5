@@ -304,7 +304,7 @@ bool World::parseFile(ifstream & input)
 	shot = new WO_PortalShot();
 	shot->setVertStartIndex(SPHERE_START);
 	shot->setTotalVertices(SPHERE_VERTS);
-	shot->setSize(Vec3D(0.1, 0.1, 0.1));
+	shot->setSize(Vec3D(0.05, 0.05, 0.05));
 
 	return true;
 }
@@ -402,6 +402,21 @@ void World::removeWO(Vec3D pos)
 	int j = (int)((pos.getZ() - 0.5*cell_width) / cell_width);
 	int k = (int)((pos.getY() - 0.5*cell_width) / cell_width);
 	levels_array[k][j*width + i] = new WorldObject(); //make it empty!
+}
+
+void World::movePortal(WO_Portal* portal, Vec3D pos)
+{
+	portal->moveTo(pos);
+}
+
+void World::shootPortal(Vec3D pos, Vec3D dir, int time, WO_Portal* portal)
+{
+	shot->beginShot();
+	shot->setStartTime(time);
+	shot->setStartPos(pos);
+	shot->setWPosition(pos);
+	shot->setDir(dir);
+	shot->setMaterial(portal->getMaterial());
 }
 
 /*----------------------------*/
@@ -533,24 +548,4 @@ glm::vec3 World::getLetterColor(int i)
 		printf("\nERROR. Invalid id number entered for key/door ID.\n");
 		return glm::vec3(-1, -1, -1);
 	}
-}
-
-void World::movePortal1(Vec3D pos)
-{
-	portal1->moveTo(pos);
-}
-
-void World::movePortal2(Vec3D pos)
-{
-	portal2->moveTo(pos);
-}
-
-void World::shootPortal(Vec3D pos, Vec3D dir, int time, WO_Portal* portal)
-{
-	shot->beginShot();
-	shot->setStartTime(time);
-	shot->setStartPos(pos);
-	shot->setWPosition(pos);
-	shot->setDir(dir);
-	shot->setMaterial(portal->getMaterial());
 }
