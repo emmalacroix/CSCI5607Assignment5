@@ -88,3 +88,41 @@ void WO_Portal::moveTo(Vec3D pos)
 	world_pos = pos;
 	exists = true;
 }
+
+bool WO_Portal::getIntersection(Vec3D origin, Vec3D dir, Intersection& iSect)
+{
+	if (findPlaneIntersection(origin, dir, normal, world_pos, iSect))
+	{
+		//check to see if intersection pt is within portal bounds
+		Vec3D inter_pt = iSect.getPoint();
+
+
+
+	}
+
+	return false;
+}
+
+bool WO_Portal::findPlaneIntersection(Vec3D origin, Vec3D dir, Vec3D face_norm, Vec3D face_pt, Intersection & iSect)
+{
+	//algorithm below is a modification of the one described by:
+	//https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-plane-and-ray-disk-intersection
+
+	float denom = dotProduct(dir, face_norm);
+
+	if (denom > kEpsilon) //save time; don't worry about really small numbers
+	{
+		Vec3D dist = face_pt - origin;
+		float t = dotProduct(dist, face_norm) / denom;
+
+		bool result = (t >= 0);
+
+		if (result)
+		{
+			//store intersection point (need this for Triangle)
+			iSect.setPoint(origin + t*dir);
+			return true;
+		}
+	}
+	return false;
+}

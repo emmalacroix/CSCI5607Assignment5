@@ -377,7 +377,7 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 }
 
 //check if given pos vector collides with and WObjs in map
-Intersection World::checkCollision(Vec3D pos)
+Intersection World::checkCollision(Vec3D origin, Vec3D dir, Vec3D pos)
 {
 	Intersection iSect;
 
@@ -390,7 +390,22 @@ Intersection World::checkCollision(Vec3D pos)
 		pos.getY() < num_levels*cell_width
 		)
 	{
-		iSect.setObject(getWO(pos));
+		WorldObject* col_obj = getWO(pos);
+
+		//check for portal collisions
+		if (col_obj->getType() == EMPTY_WOBJ)
+		{
+			WO_Portal* portal = (WO_Portal*) col_obj;
+
+			if (portal1->getIntersection(origin, dir, iSect)) iSect.setObject(portal1);
+			else if (portal2->getIntersection(origin, dir, iSect)) iSect.setObject(portal2);
+			else iSect.setObject(col_obj);
+		}
+		else if (col_obj->getType() == WALL_WOBJ)
+		{
+
+		}
+		else iSect.setObject(col_obj);
 	}
 
 	return iSect;

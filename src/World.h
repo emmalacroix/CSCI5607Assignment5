@@ -25,19 +25,21 @@
 
 class World{
 private:
-	WorldObject*** levels_array;
 	int width;
 	int height;
 	int num_levels;
 	Coord2D start_indices;
 	int start_level;
 	float cell_width;				//width of each cell/square of map
+	float collision_radius;
+	float open_speed;
+
+	//objects within World
+	WorldObject*** levels_array;
 	WorldObject* floor;
 	WO_Portal* portal1;
 	WO_Portal* portal2;
 	WO_PortalShot* shot;
-	float collision_radius;
-	float open_speed;
 
 	//modelData indices
 	int CUBE_START = 0;
@@ -90,7 +92,7 @@ public:
 	//OTHERS
 	bool parseFile(std::ifstream& input);
 	void draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID);
-	Intersection checkCollision(Vec3D pos);
+	Intersection checkCollision(Vec3D origin, Vec3D dir, Vec3D pos);
 	void removeWO(Vec3D pos);
 	void movePortal(WO_Portal* portal, Vec3D pos);
 	void shootPortal(Vec3D pos, Vec3D dir, int time, WO_Portal* portal);

@@ -13,6 +13,7 @@
 #include "Util.h"
 #include "Material.h"
 #include "Camera.h"
+#include "Vec3D.h"
 
 enum WOBJ_type
 {
@@ -63,13 +64,10 @@ public:
 
 	//VIRTUAL
 	virtual int getType();
-	//virtual Vec3D findIntersection(Vec3D pt, Vec3D dir);
 
 	//OTHER
 	void draw(Camera* cam, GLuint shaderProgram); //shared draw function among WObjs; WO_Portal has its own implementation
 
 };
-
-
 
 #endif

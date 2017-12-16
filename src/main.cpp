@@ -71,7 +71,7 @@ ifstream checkSceneFile(char* fileName);
 SDL_Window* initSDL(SDL_GLContext& context);
 void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld);
 void mouseMove(SDL_MouseMotionEvent & event, Character* player, float horizontal_angle, float vertical_angle);
-bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player);
+bool checkPlayerPosition(Vec3D& temp_pos, World* myWorld, Character* player);
 bool updateCharacter(Character* player, World* myWorld);
 void updateForFalling(Character* player, World* myWorld);
 void updateForJumping(Character* player, World* myWorld);
@@ -493,7 +493,6 @@ void mouseMove(SDL_MouseMotionEvent & event, Character* player, float horizontal
 	player->setUp(temp_up);	
 }
 
-
 /*--------------------------------------------------------------*/
 // onKeyDown : determine which key was pressed and how to edit
 //				current translation or rotation parameters
@@ -511,7 +510,7 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	Vec3D temp_up = up;
 
 	float collision_radius = myWorld->getCollisionRadius();
-	Intersection iSect = myWorld->checkCollision(pos + 0.5*collision_radius*dir);
+	Intersection iSect = myWorld->checkCollision(pos, dir, pos + 0.5*collision_radius*dir);
 	WorldObject* front_obj = iSect.getObject();
 
 	switch (event.keysym.sym)
@@ -622,11 +621,15 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	player->setUp(temp_up);	
 }//END onKeyDown
 
-bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
+/*--------------------------------------------------------------*/
+// checkPlayerPosition : 
+/*--------------------------------------------------------------*/
+bool checkPlayerPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 {
 	Vec3D pos = player->getPos();
+	Vec3D dir = player->getDir();
 
-	Intersection iSect = myWorld->checkCollision(temp_pos);
+	Intersection iSect = myWorld->checkCollision(pos, dir, temp_pos);
 	WorldObject* collided_obj = iSect.getObject();
 	Vec3D collided_pt = iSect.getPoint();
 
@@ -654,8 +657,6 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 
 			if (door->isLocked())
 			{
-				//cout << "Collided with locked door " << d_id << endl;
-
 				if (player->hasKey(d_id))
 				{
 					printf("We have the right key (%i)!\n", d_id);
@@ -666,8 +667,6 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 			}
 			else
 			{
-				//cout << "Collided with unlocked door " << d_id << endl;
-
 				if (door->getWPosition().getY() < myWorld->getCellWidth())
 				{
 					//if door is unlocked and not all the way up - don't move
@@ -696,14 +695,17 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 	}
 
 	return false;
-}//END checkPosition
+}//END checkPlayerPosition
 
+/*--------------------------------------------------------------*/
+// updateCharacter : 
+/*--------------------------------------------------------------*/
 bool updateCharacter(Character * player, World * myWorld)
 {
 
 	Vec3D temp_pos = player->getPos() + player->getVelocity();
 
-	if (!checkPosition(temp_pos, myWorld, player))
+	if (!checkPlayerPosition(temp_pos, myWorld, player))
 	{
 		player->setPos(temp_pos);
 		return false;
@@ -713,6 +715,9 @@ bool updateCharacter(Character * player, World * myWorld)
 	return true;
 }
 
+/*--------------------------------------------------------------*/
+// updateForFalling : 
+/*--------------------------------------------------------------*/
 void updateForFalling(Character * player, World * myWorld)
 {
 	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
@@ -723,7 +728,7 @@ void updateForFalling(Character * player, World * myWorld)
 		Vec3D right = player->getRight();
 		Vec3D up = player->getUp();
 
-		Intersection under_sect = myWorld->checkCollision(pos + (-0.1*up));
+		Intersection under_sect = myWorld->checkCollision(pos, -1*up, pos + (-0.1*up));
 		WorldObject* under_obj = under_sect.getObject();
 
 		if (under_obj != nullptr)
@@ -748,6 +753,9 @@ void updateForFalling(Character * player, World * myWorld)
 	}
 }
 
+/*--------------------------------------------------------------*/
+// updateForJumping : 
+/*--------------------------------------------------------------*/
 void updateForJumping(Character* player, World* myWorld)
 {
 	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
@@ -758,7 +766,7 @@ void updateForJumping(Character* player, World* myWorld)
 		Vec3D right = player->getRight();
 		Vec3D up = player->getUp();
 		
-		Intersection above_sect = myWorld->checkCollision(pos + 0.1*up);
+		Intersection above_sect = myWorld->checkCollision(pos, up, pos + 0.1*up);
 		WorldObject* above_obj = above_sect.getObject();
 
 		if (above_obj != nullptr)
@@ -773,6 +781,9 @@ void updateForJumping(Character* player, World* myWorld)
 	}
 }
 
+/*--------------------------------------------------------------*/
+// updatePortalShot : 
+/*--------------------------------------------------------------*/
 void updatePortalShot(WO_PortalShot* shot, int time)
 {
 	int t = time - shot->getStartTime(); //time since shot was fired

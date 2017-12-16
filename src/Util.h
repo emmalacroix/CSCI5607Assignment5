@@ -43,8 +43,13 @@ namespace util
 
 	GLuint LoadTexture(const char* texFile);
 
-	//
+	//split a comma-separated string into substrings
 	std::vector<std::string> commaSplit(std::string line);
+
+	//plane intersection
+	const int kEpsilon = 1e-6; //arbitrary small int for plane intersection
+	//bool findIntersectionPoint(Vec3D origin, Vec3D dir, Vec3D face_norm, Vec3D face_pt, Intersection& iSect);
+
 }
 
 #endif

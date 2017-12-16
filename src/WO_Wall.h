@@ -2,6 +2,7 @@
 #define WO_WALL_INCLUDED
 
 #include "WorldObject.h"
+#include "Intersection.h"
 
 class WO_Wall : public WorldObject
 {
@@ -16,6 +17,9 @@ public:
 
 	//VIRTUAL
 	int getType();
+
+	//OTHERS
+	bool getIntersection(Vec3D origin, Vec3D dir, Intersection& iSect);
 };
 
 #endif
