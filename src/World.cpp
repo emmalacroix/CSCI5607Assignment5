@@ -1,5 +1,4 @@
 #include "World.h"
-#include "WO_Portal.h"
 
 using namespace std;
 
@@ -342,8 +341,11 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 	glUniform1i(uniTexID, 1); //Set texture ID to use for floor (1 = brick texture)
 	floor->draw(cam, shaderProgram);
 
-	portal1->draw(cam, shaderProgram);
-	portal2->draw(cam, shaderProgram);
+	if (portal1->doesExist() && portal2->doesExist())
+	{
+		portal1->draw(cam, shaderProgram);
+		portal2->draw(cam, shaderProgram);
+	}
 }
 
 //check if given pos vector collides with and WObjs in map
@@ -505,14 +507,26 @@ glm::vec3 World::getLetterColor(int i)
 	}
 }
 
-void World::movePortal1To(Vec3D pos)
+void World::movePortal1(Vec3D pos)
 {
-	WO_Portal* portal = (WO_Portal*)portal1;
-	portal->moveTo(pos);
+	portal1->moveTo(pos);
 }
 
-void World::movePortal2To(Vec3D pos)
+void World::movePortal2(Vec3D pos)
 {
-	WO_Portal* portal = (WO_Portal*)portal2;
-	portal->moveTo(pos);
+	portal2->moveTo(pos);
+}
+
+// void World::movePortal2To(Vec3D pos)
+// {
+// 	//WO_Portal* portal = (WO_Portal*)portal2;
+// 	portal->moveTo(pos);
+// }
+
+void World::shootPortal(Vec3D pos, Vec3D dir, int time, WO_Portal* portal)
+{
+	shot->beginShot();
+	shot->setStartTime(time);
+	shot->setPos(pos);
+	shot->setDir(dir);
 }

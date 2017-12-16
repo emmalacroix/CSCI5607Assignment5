@@ -12,6 +12,7 @@
 #include "Camera.h"
 #include "Util.h"
 #include "Intersection.h"
+#include "PortalShot.h"
 
 //WorldObject classes
 #include "WorldObject.h"
@@ -32,8 +33,9 @@ private:
 	int start_level;
 	float cell_width;				//width of each cell/square of map
 	WorldObject* floor;
-	WorldObject* portal1;
-	WorldObject* portal2;
+	WO_Portal* portal1;
+	WO_Portal* portal2;
+	PortalShot* shot;
 	float collision_radius;
 	float open_speed;
 
@@ -87,8 +89,9 @@ public:
 	void draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID);
 	Intersection checkCollision(Vec3D pos);
 	void removeWO(Vec3D pos);
-	void movePortal1To(Vec3D pos);
-	void movePortal2To(Vec3D pos);
+	void movePortal1(Vec3D pos);
+	void movePortal2(Vec3D pos);
+	void shootPortal(Vec3D pos, Vec3D dir, int time, WO_Portal* portal);
 
 };
 
