@@ -517,11 +517,7 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	switch (event.keysym.sym)
 	{
 	/////////////////////////////////
-<<<<<<< HEAD
 	//TRANSLATION WITH WASD
-=======
-	//TRANSLATION WITH WASD		   //
->>>>>>> emma
 	/////////////////////////////////
 	case SDLK_w:
 		//printf("Up arrow pressed - step forward\n");
@@ -540,7 +536,7 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		player->setVelocity(Vec3D(-1*step_size*right.getX(), 0, -1*step_size*right.getZ()));
 		break;
 	////////////////////////////////
-	//TURNING WITH A/D KEYS		  //
+	//TURNING WITH A/D KEYS
 	////////////////////////////////
 	/*case SDLK_d:
 		//printf("D key pressed - turn to the right\n");
@@ -553,7 +549,7 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		temp_right = cross(temp_dir, up); //calc new right using new dir
 		break;*/
 	////////////////////////////////
-	//TILTING WITH W/S KEYS		  //
+	//TILTING WITH W/S KEYS
 	////////////////////////////////
 	/*case SDLK_w:
 		//printf("W key pressed - tilt up\n");
@@ -566,7 +562,7 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		temp_up = cross(right, temp_dir); //calc new up using new dir
 		break;*/
 	////////////////////////////////
-	//JUMP WITH SPACEBAR		  //
+	//JUMP WITH SPACEBAR
 	////////////////////////////////
 	case SDLK_SPACE:
 	{

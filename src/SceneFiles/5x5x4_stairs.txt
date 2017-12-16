@@ -1,0 +1,27 @@
+# Dimensions (Level width, Level height, number of levels)
+5,5,4
+# level 0
+0,0,0,0,0
+W,W,W,0,W
+W,W,0,0,W
+W,W,0,0,W
+W,W,W,0,W
+# level 1
+0,0,0,0,0
+W,0,0,0,0
+W,0,0,0,W
+W,W,0,0,W
+W,W,0,0,W
+# level 2
+0,0,0,0,0
+0,0,W,0,0
+0,0,0,0,W
+W,0,0,0,W
+W,0,0,0,W
+# level 3
+0,0,0,0,0
+0,0,0,0,0
+0,0,0,0,0
+0,0,0,0,0
+S,0,0,0,0
+# floor drawn underneath at y = -0.5*cell_width
