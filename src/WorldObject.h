@@ -22,7 +22,8 @@ enum WOBJ_type
 	KEY_WOBJ,
 	GOAL_WOBJ,
 	START_WOBJ,
-	PORTAL_WOBJ
+	PORTAL_WOBJ,
+	SHOT_WOBJ
 };
 
 class WorldObject

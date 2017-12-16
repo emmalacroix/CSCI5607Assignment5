@@ -10,7 +10,6 @@ private:
 public:
 	//CONSTRUCTORS AND DESTRUCTORS
 	WO_Portal();
-	WO_Portal(Coord2D indices);
 	~WO_Portal();
 
 	//SETTERS

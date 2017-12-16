@@ -21,6 +21,7 @@
 #include "WO_Start.h"
 #include "WO_Wall.h"
 #include "WO_Portal.h"
+#include "WO_PortalShot.h"
 
 class World{
 private:
@@ -32,8 +33,9 @@ private:
 	int start_level;
 	float cell_width;				//width of each cell/square of map
 	WorldObject* floor;
-	WorldObject* portal1;
-	WorldObject* portal2;
+	WO_Portal* portal1;
+	WO_Portal* portal2;
+	WO_PortalShot* shot;
 	float collision_radius;
 	float open_speed;
 
@@ -78,6 +80,9 @@ public:
 	int getHeight();
 	float getCellWidth();
 	WorldObject* getWO(Vec3D v);
+	WO_Portal* getPortal1();
+	WO_Portal* getPortal2();
+	WO_PortalShot* getShot();
 	Vec3D getWorldPosition(Coord2D c, int level);
 	Vec3D getStartWorldPosition();
 	float getCollisionRadius();
@@ -87,8 +92,8 @@ public:
 	void draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID);
 	Intersection checkCollision(Vec3D pos);
 	void removeWO(Vec3D pos);
-	void movePortal1To(Vec3D pos);
-	void movePortal2To(Vec3D pos);
+	void movePortal(WO_Portal* portal, Vec3D pos);
+	void shootPortal(Vec3D pos, Vec3D dir, int time, WO_Portal* portal);
 
 };
 

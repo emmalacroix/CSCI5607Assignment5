@@ -29,7 +29,7 @@
 #include <fstream>
 #include <string>
 
-//MY CLASSES
+//OUR CLASSES
 #include "World.h"
 #include "Camera.h"
 #include "Character.h"
@@ -50,6 +50,7 @@ const float cell_width = 1.0;
 
 const int jump_duration = 1000; //in milliseconds
 const float jump_height = 1.0;
+const float mouse_speed = 10;
 
 #ifdef __APPLE__
 const float step_size = 0.006f * cell_width;
@@ -74,6 +75,7 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player);
 bool updateCharacter(Character* player, World* myWorld);
 void updateForFalling(Character* player, World* myWorld);
 void updateForJumping(Character* player, World* myWorld);
+void updatePortalShot(WO_PortalShot* shot, int time);
 
 int main(int argc, char *argv[]) {
 	/////////////////////////////////
@@ -207,7 +209,7 @@ int main(int argc, char *argv[]) {
 	//PORTALS
 	/////////////////////////////////
 	//testing testing
-	myWorld->movePortal1To(start_pos);
+	myWorld->movePortal(myWorld->getPortal1(), start_pos);
 
 	/////////////////////////////////
 	//BUILD VERTEX ARRAY OBJECT
@@ -234,10 +236,11 @@ int main(int argc, char *argv[]) {
 	GLuint shaderProgram = util::LoadShader("Shaders/phongTex.vert", "Shaders/phongTex.frag");
 
 	//load in textures
-	GLuint tex0 = util::LoadTexture("Shaders/wood.bmp");
-	GLuint tex1 = util::LoadTexture("Shaders/grey_stones.bmp");
+	GLuint tex0 = util::LoadTexture("textures/wood.bmp");
+	GLuint tex1 = util::LoadTexture("textures/metal_floor.bmp");
+	GLuint tex2 = util::LoadTexture("textures/metal_wall.bmp");
 
-	if (tex0 == -1 || tex1 == 1 || shaderProgram == -1)
+	if (tex0 == -1 || tex1 == -1 || shaderProgram == -1)
 	{
 		//Clean Up
 		SDL_GL_DeleteContext(context);
@@ -308,6 +311,13 @@ int main(int argc, char *argv[]) {
 						SDL_WarpMouseInWindow(window, screen_width/2, screen_height/2);
 						mouseActive = true;
 					}
+				case SDL_MOUSEBUTTONDOWN:
+					if (windowEvent.button.button == SDL_BUTTON_LEFT) 
+					{
+						myWorld->shootPortal(player->getPos(), player->getDir(), SDL_GetTicks(), myWorld->getPortal1());
+					} else if (windowEvent.button.button == SDL_BUTTON_RIGHT) {
+						myWorld->shootPortal(player->getPos(), player->getDir(), SDL_GetTicks(), myWorld->getPortal2());
+					}
 				default:
 					break;
 			}//END polling switch
@@ -319,6 +329,18 @@ int main(int argc, char *argv[]) {
 		// {
 		// 	SDL_WarpMouseInWindow(window, screen_width/2, screen_height/2);
 		// }
+
+		if (myWorld->getShot()->shooting())
+		{
+			updatePortalShot(myWorld->getShot(), SDL_GetTicks());
+			// Vec3D front_pos = myWorld->getShot()->getWPosition() + 0.5*myWorld->getCollisionRadius()*myWorld->getShot()->getDir();
+			// Intersection iSect = myWorld->checkCollision(front_pos);
+			// if (iSect.getObject()->getType() == WALL_WOBJ)
+			// {
+			// 	myWorld->movePortal(myWorld->getShot()->getPortal(), myWorld->getShot()->getWPosition());
+			// 	myWorld->getShot()->ceaseShot();
+			// }
+		}
 
 		updateForFalling(player, myWorld);
 		updateForJumping(player, myWorld);
@@ -459,8 +481,8 @@ void mouseMove(SDL_MouseMotionEvent & event, Character* player, float horizontal
 	Vec3D temp_right = right;
 	Vec3D temp_up = up;
 
-	horizontal_angle += 50 * step_size * float(screen_width/2 - event.x);
-	vertical_angle += 50 * step_size * float(screen_height/2 - event.y);
+	horizontal_angle += mouse_speed * step_size * float(screen_width/2 - event.x);
+	vertical_angle += mouse_speed * step_size * float(screen_height/2 - event.y);
 
 	temp_dir = dir + (Vec3D(cos(vertical_angle) * sin(horizontal_angle), sin(vertical_angle), cos(vertical_angle) * cos(horizontal_angle)));
 	temp_right = right + (Vec3D(sin(horizontal_angle - 3.14f/2.0f), 0, cos(horizontal_angle - 3.14f/2.0f)));
@@ -495,7 +517,11 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	switch (event.keysym.sym)
 	{
 	/////////////////////////////////
+<<<<<<< HEAD
 	//TRANSLATION WITH WASD
+=======
+	//TRANSLATION WITH WASD		   //
+>>>>>>> emma
 	/////////////////////////////////
 	case SDLK_w:
 		//printf("Up arrow pressed - step forward\n");
@@ -706,7 +732,7 @@ void updateForFalling(Character * player, World * myWorld)
 
 		if (under_obj != nullptr)
 		{
-			if (under_obj->getType() == EMPTY_WOBJ || under_obj->getType() == KEY_WOBJ)
+			if (!(under_obj->getType() == WALL_WOBJ) && !(under_obj->getType() == DOOR_WOBJ) && !(under_obj->getType() == PORTAL_WOBJ))
 			{
 				Vec3D vel = player->getVelocity();
 				Vec3D down = Vec3D(0,-1,0);
@@ -729,7 +755,6 @@ void updateForFalling(Character * player, World * myWorld)
 void updateForJumping(Character* player, World* myWorld)
 {
 	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
-	cout << "t is " << t << endl;
 	if (t < jump_duration) //it has been less than jump_duration ms since jump started
 	{
 		Vec3D pos = player->getPos();
@@ -742,13 +767,19 @@ void updateForJumping(Character* player, World* myWorld)
 
 		if (above_obj != nullptr)
 		{
-			if (above_obj->getType() == EMPTY_WOBJ || above_obj->getType() == KEY_WOBJ)
+			if (!(above_obj->getType() == WALL_WOBJ) && !(above_obj->getType() == DOOR_WOBJ) && !(above_obj->getType() == PORTAL_WOBJ))
 			{
-				Vec3D vel = player->getVelocity();
 				float x = (float)t/(float)jump_duration;
 				float y = 4-8*x; //derivative of y=-(1/4)*(4x-2)^2+1 (nicely arched jump parabola)
 				player->setVelocity(Vec3D(fabs(y)*jump_height*step_size*up.getX(), y*jump_height*step_size*up.getY(), fabs(y)*jump_height*step_size*up.getZ()));
 			}
 		}	
 	}
+}
+
+void updatePortalShot(WO_PortalShot* shot, int time)
+{
+	int t = time - shot->getStartTime(); //time since shot was fired
+	Vec3D new_pos = shot->getStartPos() + t*step_size*shot->getDir();
+	shot->setWPosition(new_pos);
 }
