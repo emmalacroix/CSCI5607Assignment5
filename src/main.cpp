@@ -76,6 +76,7 @@ bool updateCharacter(Character* player, World* myWorld);
 void updateForFalling(Character* player, World* myWorld);
 void updateForJumping(Character* player, World* myWorld);
 void updatePortalShot(WO_PortalShot* shot, int time);
+void onMouseClick(SDL_MouseButtonEvent& event, Character* player, World* myWorld);
 
 int main(int argc, char *argv[]) {
 	/////////////////////////////////
@@ -311,13 +312,19 @@ int main(int argc, char *argv[]) {
 						SDL_WarpMouseInWindow(window, screen_width/2, screen_height/2);
 						mouseActive = true;
 					}
-				case SDL_MOUSEBUTTONDOWN:
-					if (windowEvent.button.button == SDL_BUTTON_LEFT) 
+				/*case SDL_MOUSEBUTTONUP:
+					//cout << "Mouse button down" << endl;
+					//onMouseClick(windowEvent.button, player, myWorld);
+					if (windowEvent.button.button == SDL_BUTTON_LEFT)
 					{
+						cout << "Left mouse button pressed" << endl;
 						myWorld->shootPortal(player->getPos(), player->getDir(), SDL_GetTicks(), myWorld->getPortal1());
-					} else if (windowEvent.button.button == SDL_BUTTON_RIGHT) {
-						myWorld->shootPortal(player->getPos(), player->getDir(), SDL_GetTicks(), myWorld->getPortal2());
 					}
+					else if (windowEvent.button.button == SDL_BUTTON_RIGHT)
+
+						cout << "Right mouse button pressed" << endl; {
+						myWorld->shootPortal(player->getPos(), player->getDir(), SDL_GetTicks(), myWorld->getPortal2());
+					}*/
 				default:
 					break;
 			}//END polling switch
@@ -510,7 +517,7 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	Vec3D temp_up = up;
 
 	float collision_radius = myWorld->getCollisionRadius();
-	Intersection iSect = myWorld->checkCollision(pos, dir, pos + 0.5*collision_radius*dir);
+	Intersection iSect = myWorld->checkCollision(pos + 0.5*collision_radius*dir);
 	WorldObject* front_obj = iSect.getObject();
 
 	switch (event.keysym.sym)
@@ -519,19 +526,19 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	//TRANSLATION WITH WASD
 	/////////////////////////////////
 	case SDLK_w:
-		//printf("Up arrow pressed - step forward\n");
+		printf("Up arrow pressed - step forward\n");
 		player->setVelocity(Vec3D(step_size*dir.getX(), 0, step_size*dir.getZ()));
 		break;
 	case SDLK_s:
-		//printf("Down arrow pressed - step backward\n");
+		printf("Down arrow pressed - step backward\n");
 		player->setVelocity(Vec3D(-1*step_size*dir.getX(), 0, -1*step_size*dir.getZ()));
 		break;
 	case SDLK_d:
-		//printf("Right arrow pressed - step to the right\n");
+		printf("Right arrow pressed - step to the right\n");
 		player->setVelocity(Vec3D(step_size*right.getX(), 0, step_size*right.getZ()));
 		break;
 	case SDLK_a:
-		//printf("Left arrow pressed - step to the left\n");
+		printf("Left arrow pressed - step to the left\n");
 		player->setVelocity(Vec3D(-1*step_size*right.getX(), 0, -1*step_size*right.getZ()));
 		break;
 	////////////////////////////////
@@ -629,7 +636,7 @@ bool checkPlayerPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 	Vec3D pos = player->getPos();
 	Vec3D dir = player->getDir();
 
-	Intersection iSect = myWorld->checkCollision(pos, dir, temp_pos);
+	Intersection iSect = myWorld->checkCollision(temp_pos);
 	WorldObject* collided_obj = iSect.getObject();
 	Vec3D collided_pt = iSect.getPoint();
 
@@ -728,7 +735,7 @@ void updateForFalling(Character * player, World * myWorld)
 		Vec3D right = player->getRight();
 		Vec3D up = player->getUp();
 
-		Intersection under_sect = myWorld->checkCollision(pos, -1*up, pos + (-0.1*up));
+		Intersection under_sect = myWorld->checkCollision(pos + (-0.1*up));
 		WorldObject* under_obj = under_sect.getObject();
 
 		if (under_obj != nullptr)
@@ -766,7 +773,7 @@ void updateForJumping(Character* player, World* myWorld)
 		Vec3D right = player->getRight();
 		Vec3D up = player->getUp();
 		
-		Intersection above_sect = myWorld->checkCollision(pos, up, pos + 0.1*up);
+		Intersection above_sect = myWorld->checkCollision(pos + 0.1*up);
 		WorldObject* above_obj = above_sect.getObject();
 
 		if (above_obj != nullptr)
@@ -789,4 +796,18 @@ void updatePortalShot(WO_PortalShot* shot, int time)
 	int t = time - shot->getStartTime(); //time since shot was fired
 	Vec3D new_pos = shot->getStartPos() + t*step_size*shot->getDir();
 	shot->setWPosition(new_pos);
+}
+
+void onMouseClick(SDL_MouseButtonEvent & event, Character* player, World * myWorld)
+{
+	if (event.button == SDL_BUTTON_LEFT)
+	{
+		cout << "Left mouse button pressed" << endl;
+		myWorld->shootPortal(player->getPos(), player->getDir(), SDL_GetTicks(), myWorld->getPortal1());
+	}
+	else if (event.button == SDL_BUTTON_RIGHT)
+	
+		cout << "Right mouse button pressed" << endl; {
+		myWorld->shootPortal(player->getPos(), player->getDir(), SDL_GetTicks(), myWorld->getPortal2());
+	}
 }

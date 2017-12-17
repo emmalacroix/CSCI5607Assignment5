@@ -377,7 +377,7 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 }
 
 //check if given pos vector collides with and WObjs in map
-Intersection World::checkCollision(Vec3D origin, Vec3D dir, Vec3D pos)
+Intersection World::checkCollision(Vec3D pos)
 {
 	Intersection iSect;
 
@@ -390,24 +390,10 @@ Intersection World::checkCollision(Vec3D origin, Vec3D dir, Vec3D pos)
 		pos.getY() < num_levels*cell_width
 		)
 	{
-		WorldObject* col_obj = getWO(pos);
-
-		//check for portal collisions
-		if (col_obj->getType() == EMPTY_WOBJ)
-		{
-			WO_Portal* portal = (WO_Portal*) col_obj;
-
-			if (portal1->getIntersection(origin, dir, iSect)) iSect.setObject(portal1);
-			else if (portal2->getIntersection(origin, dir, iSect)) iSect.setObject(portal2);
-			else iSect.setObject(col_obj);
-		}
-		else if (col_obj->getType() == WALL_WOBJ)
-		{
-
-		}
-		else iSect.setObject(col_obj);
+		iSect.setObject(getWO(pos));
 	}
 
+	iSect.setObject(nullptr);
 	return iSect;
 }
 
@@ -426,12 +412,34 @@ void World::movePortal(WO_Portal* portal, Vec3D pos)
 
 void World::shootPortal(Vec3D pos, Vec3D dir, int time, WO_Portal* portal)
 {
-	shot->beginShot();
+	/*shot->beginShot();
 	shot->setStartTime(time);
 	shot->setStartPos(pos);
 	shot->setWPosition(pos);
 	shot->setDir(dir);
-	shot->setMaterial(portal->getMaterial());
+	shot->setMaterial(portal->getMaterial());*/
+
+	//loop through and extend pos
+	for (int i = 0; i < 3; i++)
+	{
+		Intersection iSect = checkCollision(pos + cell_width*i*dir);
+
+		if (iSect.getObject() == nullptr) break;
+
+		WorldObject* col_obj = iSect.getObject();
+
+		if (col_obj->getType() == WALL_WOBJ)
+		{
+			WO_Wall* wall = (WO_Wall*)col_obj;
+
+			if (wall->getIntersection(pos, dir, iSect))
+			{
+				iSect.setObject(wall);
+				iSect.getPoint().print();
+				portal->setWPosition(iSect.getPoint());
+			}
+		}
+	}
 }
 
 /*----------------------------*/

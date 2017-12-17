@@ -82,12 +82,18 @@ bool WO_Wall::getIntersection(Vec3D origin, Vec3D dir, Intersection& iSect)
 	float tmin = min(tx1, tx2);
 	float tmax = max(tx1, tx2);
 
+	cout << "tmin : " << tmin << endl;
+	cout << "tmax : " << tmax << endl;
+
 	//test y faces
 	float ty1 = (min_y - origin.getY())*inv_y;
 	float ty2 = (max_y - origin.getY())*inv_y;
 
 	tmin = max(tmin, min(ty1, ty2));
 	tmax = min(tmax, max(ty1, ty2));
+
+	cout << "tmin : " << tmin << endl;
+	cout << "tmax : " << tmax << endl;
 
 	if (tmax < tmin) return false; //did not intersect
 
@@ -97,6 +103,9 @@ bool WO_Wall::getIntersection(Vec3D origin, Vec3D dir, Intersection& iSect)
 
 	tmin = max(tmin, min(tz1, tz2));
 	tmax = min(tmax, max(tz1, tz2));
+
+	cout << "tmin : " << tmin << endl;
+	cout << "tmax : " << tmax << endl;
 
 	//determine minimum t value
 	if (tmax >= tmin)
