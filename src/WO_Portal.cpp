@@ -66,6 +66,20 @@ void WO_Portal::draw(Camera* cam, GLuint shaderProgram)
 
 	//build model mat specific to this WObj
 	model = glm::translate(model, pos_v);
+
+	//rotate assuming that it's originally facing +z
+	glm::vec3 crossp = util::vec3DtoGLM(cross(normal, Vec3D(0, 0, 1)));
+	glm::normalize(crossp);
+
+	//cout << "Rotation axis: ";
+	//cross(normal, Vec3D(0, 0, 1)).print();
+
+	float angle = acos(dotProduct(Vec3D(0, 0, 1), normal));
+
+	//cout << "Rotation angle: " << angle << endl;
+
+	if (angle != 0.0) model = glm::rotate(model, angle, crossp);
+
 	model = glm::scale(model, size_v);
 	glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
 

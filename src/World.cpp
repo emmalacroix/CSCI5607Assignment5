@@ -125,7 +125,7 @@ Vec3D World::getWorldPosition(Coord2D c, int level)
 {
 	return Vec3D(
 		c.getI()* cell_width + 0.5*cell_width,
-		level*cell_width,
+		level*cell_width + 0.5*cell_width,
 		c.getJ()*cell_width + 0.5*cell_width);
 }
 
@@ -266,9 +266,9 @@ bool World::parseFile(ifstream & input)
 	mat.setSpecular(glm::vec3(0, 0, 0));
 
 	floor->setMaterial(mat);
-	floor->setSize(Vec3D(width*cell_width, 0.01, height*cell_width)); //xz plane
+	floor->setSize(Vec3D(width*cell_width, floor_y_thickness, height*cell_width)); //xz plane
 
-	Vec3D pos = Vec3D(width*cell_width*0.5, -0.5*cell_width, height*cell_width*0.5);
+	Vec3D pos = Vec3D(width*cell_width*0.5, -0.5*floor_y_thickness, height*cell_width*0.5);
 
 	floor->setWPosition(pos);
 
@@ -349,8 +349,12 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 					}
 
 					door->setWPosition(d_pos);
-					glUniform1i(uniTexID, 0); //Set texture ID to use (0 = wood texture)
+					glUniform1i(uniTexID, -1); //Set texture ID to use (0 = wood texture)
 				}//END DOOR_WOBJ if
+				else if (levels_array[lev][i]->getType() == WALL_WOBJ)
+				{
+					glUniform1i(uniTexID, 0);
+				}
 				else
 				{
 					glUniform1i(uniTexID, -1); //Set texture ID to use (-1 = no texture)
@@ -363,15 +367,18 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 	glUniform1i(uniTexID, 1); //Set texture ID to use for floor (1 = metal floor)
 	floor->draw(cam, shaderProgram);
 
-	glUniform1i(uniTexID, -1); //Set texture ID to use for floor (-1 = no texture)
+	glUniform1i(uniTexID, -1); //Set texture ID to use for projectile, portals (-1 = no texture)
 	if (shot->shooting())
 	{
 		shot->draw(cam, shaderProgram);
 	}
 
-	if (portal1->doesExist() && portal2->doesExist())
+	if (portal1->doesExist())
 	{
 		portal1->draw(cam, shaderProgram);
+	}
+	if (portal2->doesExist())
+	{
 		portal2->draw(cam, shaderProgram);
 	}
 }
@@ -384,7 +391,7 @@ Intersection World::checkCollision(Vec3D pos)
 	//check if in bounds of the map
 	if (pos.getX() >= 0 &&
 		pos.getZ() >= 0 &&
-		pos.getY() >= -0.5*cell_width &&
+		pos.getY() >= 0 &&
 		pos.getX() < width*cell_width &&
 		pos.getZ() < height*cell_width &&
 		pos.getY() < num_levels*cell_width

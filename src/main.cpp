@@ -354,13 +354,13 @@ int main(int argc, char *argv[]) {
 					{
 						sect.setObject(wall);
 						cout << "Placing portal at : ";
-						Vec3D ppos = sect.getPoint() + 0.5*sect.getNormal();
+						Vec3D ppos = sect.getPoint() + 0.02*cell_width*sect.getNormal();
 						ppos.print();
 						cout << "Portal normal : ";
 						sect.getNormal().print();
 						myWorld->getShot()->getPortal()->setWPosition(ppos);
 						myWorld->getShot()->getPortal()->setNorm(sect.getNormal());
-						myWorld->movePortal(myWorld->getShot()->getPortal(), sect.getPoint());
+						myWorld->movePortal(myWorld->getShot()->getPortal(), ppos);
 						myWorld->getShot()->ceaseShot();
 					}
 				}
@@ -765,7 +765,7 @@ void updateForFalling(Character * player, World * myWorld)
 		Vec3D right = player->getRight();
 		Vec3D up = player->getUp();
 
-		Intersection under_sect = myWorld->checkCollision(pos + (-cell_width*up));
+		Intersection under_sect = myWorld->checkCollision(pos + (-0.5*cell_width*up));
 		WorldObject* under_obj = under_sect.getObject();
 
 		if (under_obj != nullptr)

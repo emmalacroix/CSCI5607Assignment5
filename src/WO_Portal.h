@@ -3,6 +3,7 @@
 
 #include "WorldObject.h"
 #include "Intersection.h"
+#include <cmath>
 
 class WO_Portal : public WorldObject
 {

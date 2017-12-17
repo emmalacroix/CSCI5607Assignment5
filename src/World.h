@@ -34,6 +34,8 @@ private:
 	float collision_radius;
 	float open_speed;
 
+	const float floor_y_thickness = 0.01;
+
 	//objects within World
 	WorldObject*** levels_array;
 	WorldObject* floor;
