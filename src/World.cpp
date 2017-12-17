@@ -462,6 +462,9 @@ WorldObject* World::buildWall(Coord2D c, int level)
 	wall->setSize(Vec3D(cell_width, cell_width, cell_width));
 	wall->setWPosition(getWorldPosition(c, level));
 	wall->setLevel(level);
+	
+	WO_Wall* w = (WO_Wall*)wall;
+	w->setFaceValues();
 
 	return wall;
 }

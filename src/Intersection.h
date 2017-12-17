@@ -9,6 +9,7 @@ class Intersection
 private:
 	WorldObject* int_obj;
 	Vec3D int_pt;
+	Vec3D normal;
 
 public:
 	//CONSTRUCTORS AND DESTRUCTORS
@@ -18,10 +19,12 @@ public:
 	//SETTERS
 	void setObject(WorldObject* wo);
 	void setPoint(Vec3D p);
+	void setNormal(Vec3D n);
 
 	//GETTERS
 	WorldObject* getObject();
 	Vec3D getPoint();
+	Vec3D getNormal();
 
 };
 

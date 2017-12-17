@@ -29,6 +29,11 @@ void Intersection::setPoint(Vec3D p)
 	int_pt = p;
 }
 
+void Intersection::setNormal(Vec3D n)
+{
+	normal = n;
+}
+
 /*----------------------------*/
 // GETTERS
 /*----------------------------*/
@@ -40,4 +45,9 @@ WorldObject * Intersection::getObject()
 Vec3D Intersection::getPoint()
 {
 	return int_pt;
+}
+
+Vec3D Intersection::getNormal()
+{
+	return normal;
 }

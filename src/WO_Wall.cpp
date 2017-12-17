@@ -27,11 +27,20 @@ WO_Wall::~WO_Wall()
 {
 }
 
-
 /*----------------------------*/
 // SETTERS
 /*----------------------------*/
+void WO_Wall::setFaceValues()
+{
+	min_x = world_pos.getX() - 0.5*size.getX();
+	max_x = world_pos.getX() + 0.5*size.getX();
 
+	min_y = world_pos.getY() - 0.5*size.getY();
+	max_y = world_pos.getY() + 0.5*size.getY();
+
+	min_z = world_pos.getZ() - 0.5*size.getZ();
+	max_z = world_pos.getZ() + 0.5*size.getZ();
+}
 
 /*----------------------------*/
 // GETTERS
@@ -60,20 +69,12 @@ bool WO_Wall::getIntersection(Vec3D origin, Vec3D dir, Intersection& iSect)
 
 	float inv_x = INFINITY, inv_y = INFINITY, inv_z = INFINITY;
 
+	Vec3D temp_norm = Vec3D();
+
 	//check for divide by zeroes
 	if (dir_x != 0.0) inv_x = 1.0 / dir_x;
 	if (dir_y != 0.0) inv_y = 1.0 / dir_y;
 	if (dir_z != 0.0) inv_z = 1.0 / dir_z;
-
-	//get min x,y,z values
-	float min_x = world_pos.getX() - 0.5*size.getX();
-	float max_x = world_pos.getX() + 0.5*size.getX();
-
-	float min_y = world_pos.getY() - 0.5*size.getY();
-	float max_y = world_pos.getY() + 0.5*size.getY();
-
-	float min_z = world_pos.getZ() - 0.5*size.getZ();
-	float max_z = world_pos.getZ() + 0.5*size.getZ();
 
 	//test x faces
 	float tx1 = (min_x - origin.getX())*inv_x;
@@ -81,6 +82,8 @@ bool WO_Wall::getIntersection(Vec3D origin, Vec3D dir, Intersection& iSect)
 
 	float tmin = min(tx1, tx2);
 	float tmax = max(tx1, tx2);
+
+	(tmin == tx1) ? temp_norm = Vec3D(-1,0,0) : temp_norm = Vec3D(1, 0, 0);
 
 	//test y faces
 	float ty1 = (min_y - origin.getY())*inv_y;
@@ -90,6 +93,9 @@ bool WO_Wall::getIntersection(Vec3D origin, Vec3D dir, Intersection& iSect)
 	tmax = min(tmax, max(ty1, ty2));
 
 	if (tmax < tmin) return false; //did not intersect
+
+	if (tmin == ty1) temp_norm = Vec3D(0, -1, 0);
+	else if (tmin == ty2) temp_norm = Vec3D(0, 1, 0);
 
 	//test z faces
 	float tz1 = (min_z - origin.getZ())*inv_z;
@@ -101,8 +107,12 @@ bool WO_Wall::getIntersection(Vec3D origin, Vec3D dir, Intersection& iSect)
 	//determine minimum t value
 	if (tmax >= tmin)
 	{
+		if (tmin == tz1) temp_norm = Vec3D(0, 0, -1);
+		else if (tmin == tz2) temp_norm = Vec3D(0, 0, 1);
+
+		iSect.setNormal(temp_norm);
 		iSect.setPoint(origin + tmin*dir);
-		return true;			//does intersect!
+		return true; //does intersect!
 	}
 
 	return false;

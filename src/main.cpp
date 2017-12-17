@@ -320,6 +320,8 @@ int main(int argc, char *argv[]) {
 			case SDL_MOUSEBUTTONDOWN:
 				if (windowEvent.button.button == SDL_BUTTON_LEFT)
 				{
+					cout << "Player shot gun at pos : ";
+					player->getPos().print();
 					myWorld->shootPortal(player->getPos(), player->getDir(), SDL_GetTicks(), myWorld->getPortal1());
 				}
 				else if (windowEvent.button.button == SDL_BUTTON_RIGHT) {
@@ -352,10 +354,13 @@ int main(int argc, char *argv[]) {
 					{
 						sect.setObject(wall);
 						cout << "Placing portal at : ";
-						sect.getPoint().print();
-						myWorld->getShot()->getPortal()->setWPosition(sect.getPoint());
-						myWorld->getShot()->getPortal()->setNorm(wall->setPortalDirection(myWorld->getShot()->getWPosition()));
-						myWorld->movePortal(myWorld->getShot()->getPortal(), myWorld->getShot()->getWPosition());
+						Vec3D ppos = sect.getPoint() + 0.5*sect.getNormal();
+						ppos.print();
+						cout << "Portal normal : ";
+						sect.getNormal().print();
+						myWorld->getShot()->getPortal()->setWPosition(ppos);
+						myWorld->getShot()->getPortal()->setNorm(sect.getNormal());
+						myWorld->movePortal(myWorld->getShot()->getPortal(), sect.getPoint());
 						myWorld->getShot()->ceaseShot();
 					}
 				}
