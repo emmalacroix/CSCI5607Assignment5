@@ -392,8 +392,6 @@ Intersection World::checkCollision(Vec3D pos)
 	{
 		iSect.setObject(getWO(pos));
 	}
-
-	iSect.setObject(nullptr);
 	return iSect;
 }
 
@@ -412,15 +410,15 @@ void World::movePortal(WO_Portal* portal, Vec3D pos)
 
 void World::shootPortal(Vec3D pos, Vec3D dir, int time, WO_Portal* portal)
 {
-	/*shot->beginShot();
+	shot->beginShot();
 	shot->setStartTime(time);
 	shot->setStartPos(pos);
 	shot->setWPosition(pos);
 	shot->setDir(dir);
-	shot->setMaterial(portal->getMaterial());*/
+	shot->setMaterial(portal->getMaterial());
 
 	//loop through and extend pos
-	for (int i = 0; i < 3; i++)
+	/*for (int i = 0; i < 3; i++)
 	{
 		Intersection iSect = checkCollision(pos + cell_width*i*dir);
 
@@ -439,7 +437,7 @@ void World::shootPortal(Vec3D pos, Vec3D dir, int time, WO_Portal* portal)
 				portal->setWPosition(iSect.getPoint());
 			}
 		}
-	}
+	}*/
 }
 
 /*----------------------------*/

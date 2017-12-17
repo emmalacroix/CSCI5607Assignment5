@@ -526,47 +526,21 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 	//TRANSLATION WITH WASD
 	/////////////////////////////////
 	case SDLK_w:
-		printf("Up arrow pressed - step forward\n");
+		//printf("Up arrow pressed - step forward\n");
 		player->setVelocity(Vec3D(step_size*dir.getX(), 0, step_size*dir.getZ()));
 		break;
 	case SDLK_s:
-		printf("Down arrow pressed - step backward\n");
+		//printf("Down arrow pressed - step backward\n");
 		player->setVelocity(Vec3D(-1*step_size*dir.getX(), 0, -1*step_size*dir.getZ()));
 		break;
 	case SDLK_d:
-		printf("Right arrow pressed - step to the right\n");
+		//printf("Right arrow pressed - step to the right\n");
 		player->setVelocity(Vec3D(step_size*right.getX(), 0, step_size*right.getZ()));
 		break;
 	case SDLK_a:
-		printf("Left arrow pressed - step to the left\n");
+		//printf("Left arrow pressed - step to the left\n");
 		player->setVelocity(Vec3D(-1*step_size*right.getX(), 0, -1*step_size*right.getZ()));
 		break;
-	////////////////////////////////
-	//TURNING WITH A/D KEYS
-	////////////////////////////////
-	/*case SDLK_d:
-		//printf("D key pressed - turn to the right\n");
-		temp_dir = dir + (50*step_size*right);
-		temp_right = cross(temp_dir, up); //calc new right using new dir
-		break;
-	case SDLK_a:
-		//printf("A key pressed - turn to the left\n");
-		temp_dir = dir - (50*step_size*right);
-		temp_right = cross(temp_dir, up); //calc new right using new dir
-		break;*/
-	////////////////////////////////
-	//TILTING WITH W/S KEYS
-	////////////////////////////////
-	/*case SDLK_w:
-		//printf("W key pressed - tilt up\n");
-		temp_dir = dir + (50*step_size*up);
-		temp_up = cross(right, temp_dir); //calc new up using new dir
-		break;
-	case SDLK_s:
-		//printf("S key pressed - tilt down\n");
-		temp_dir = dir - (50*step_size*up);
-		temp_up = cross(right, temp_dir); //calc new up using new dir
-		break;*/
 	////////////////////////////////
 	//JUMP WITH SPACEBAR
 	////////////////////////////////
@@ -634,7 +608,6 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 bool checkPlayerPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 {
 	Vec3D pos = player->getPos();
-	Vec3D dir = player->getDir();
 
 	Intersection iSect = myWorld->checkCollision(temp_pos);
 	WorldObject* collided_obj = iSect.getObject();
@@ -664,6 +637,8 @@ bool checkPlayerPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 
 			if (door->isLocked())
 			{
+				//cout << "Collided with locked door " << d_id << endl;
+
 				if (player->hasKey(d_id))
 				{
 					printf("We have the right key (%i)!\n", d_id);
@@ -674,6 +649,8 @@ bool checkPlayerPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 			}
 			else
 			{
+				//cout << "Collided with unlocked door " << d_id << endl;
+
 				if (door->getWPosition().getY() < myWorld->getCellWidth())
 				{
 					//if door is unlocked and not all the way up - don't move
@@ -689,10 +666,33 @@ bool checkPlayerPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 			break;
 		case PORTAL_WOBJ:
 			cout << "Collided with a portal" << endl;
-
+			/*if (!player->isTraveling()) //we are just now entering a portal
+			{
+				player->enterPortal();
+				WO_Portal * portal = (WO_Portal *)collided_obj;
+				if (portal == myWorld->getPortal1())
+				{
+					if (myWorld->getPortal2()->doesExist())
+					{
+						temp_pos = myWorld->getPortal2()->getWPosition();
+						player->setDir(myWorld->getPortal2()->getDir());
+					}
+				}
+				else {
+					if (myWorld->getPortal1()->doesExist())
+					{
+						temp_pos = myWorld->getPortal1()->getWPosition();
+						player->setDir(myWorld->getPortal1()->getDir());
+					}
+				}
+			}*/
 			break;
 		default:
 			//collided with start -- do nothing
+			/*if (player->isTraveling()) //we were previously traveling through a portal
+			{
+				player->exitPortal(); //no longer traveling through portal
+			}*/
 			break;
 		}//END collision switch
 	}
