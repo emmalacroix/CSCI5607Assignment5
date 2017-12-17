@@ -1,0 +1,43 @@
+# Dimensions (Level width, Level height, number of levels)
+7,7,5
+# bottom level (y = (5-5)*cell_width)
+W,W,W,W,W,W,W
+W,W,W,0,0,W,W
+W,W,W,0,0,W,W
+W,W,W,W,W,W,W
+W,W,W,W,0,0,W
+W,W,W,W,0,0,W
+W,W,W,W,W,W,W
+# first middle level (y = (5-4)*cell_width)
+W,W,W,W,W,W,W
+W,S,0,0,0,K1,W
+W,0,0,0,0,0,W
+W,D1,W,W,W,W,W
+W,0,0,0,0,0,W
+W,0,0,0,0,0,W
+W,W,W,W,W,W,W
+# second middle level (y = (5-3)*cell_width)
+W,W,W,W,W,W,W
+W,W,W,W,W,W,W
+W,W,W,W,W,W,W
+W,W,W,W,W,W,W
+W,W,W,0,0,W,W
+W,W,W,0,0,W,W
+W,W,W,W,W,W,W
+# third middle level (y = (5-2)*cell_width)
+W,W,W,W,W,W,W
+W,G,0,0,0,0,W
+W,0,0,0,0,0,W
+W,W,W,W,W,D2,W
+W,0,0,0,0,0,W
+W,K2,0,0,0,0,W
+W,W,W,W,W,W,W
+# top level (y = (5-1)*cell_width)
+W,W,W,W,W,W,W
+W,W,W,W,W,W,W
+W,W,W,W,W,W,W
+W,W,W,W,W,W,W
+W,W,W,W,W,W,W
+W,W,W,W,W,W,W
+W,W,W,W,W,W,W
+# floor drawn underneath at y = -0.5*cell_width

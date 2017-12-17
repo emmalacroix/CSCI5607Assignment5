@@ -75,7 +75,7 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player);
 bool updateCharacter(Character* player, World* myWorld);
 void updateForFalling(Character* player, World* myWorld);
 void updateForJumping(Character* player, World* myWorld);
-void updatePortalShot(WO_PortalShot* shot, int time);
+bool updatePortalShot(World* myWorld, int time);
 
 int main(int argc, char *argv[]) {
 	/////////////////////////////////
@@ -337,20 +337,20 @@ int main(int argc, char *argv[]) {
 
 		if (myWorld->getShot()->shooting())
 		{
-			updatePortalShot(myWorld->getShot(), SDL_GetTicks());
-			front_pos = myWorld->getShot()->getWPosition() + 0.5*myWorld->getCollisionRadius()*myWorld->getShot()->getDir();
-			sect = myWorld->checkCollision(front_pos);
-			if (sect.getObject()->getType() == WALL_WOBJ)
+			if (updatePortalShot(myWorld, SDL_GetTicks()))
 			{
-				cout << "Creating portal" << endl;
-				WO_Wall * wallsect = (WO_Wall *)sect.getObject();
-				if (wallsect->rotatePortal(myWorld->getShot()->getWPosition()))
+				front_pos = myWorld->getShot()->getWPosition() + 0.5*myWorld->getCollisionRadius()*myWorld->getShot()->getDir();
+				sect = myWorld->checkCollision(front_pos);
+				if (sect.getObject()->getType() == WALL_WOBJ)
 				{
-					myWorld->getShot()->getPortal()->setRotated(true);
-				} else {
-					myWorld->getShot()->getPortal()->setRotated(false);
+					cout << "Creating portal" << endl;
+					WO_Wall * wallsect = (WO_Wall *)sect.getObject();
+					myWorld->getShot()->getPortal()->setDir(wallsect->setPortalDirection(myWorld->getShot()->getWPosition()));
+					myWorld->movePortal(myWorld->getShot()->getPortal(), myWorld->getShot()->getWPosition());
+					myWorld->getShot()->ceaseShot();
 				}
-				myWorld->movePortal(myWorld->getShot()->getPortal(), myWorld->getShot()->getWPosition());
+			} else {
+				cout << "out of bounds" << endl;
 				myWorld->getShot()->ceaseShot();
 			}
 		}
@@ -686,15 +686,23 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 			break;
 		case PORTAL_WOBJ:
 			cout << "Collided with a portal" << endl;
-			if (!player->isTraveling())
+			if (!player->isTraveling()) //we are just now entering a portal
 			{
 				player->enterPortal();
 				WO_Portal * portal = (WO_Portal *)collided_obj;
 				if (portal == myWorld->getPortal1())
 				{
-					temp_pos = myWorld->getPortal2()->getWPosition();
+					if (myWorld->getPortal2()->doesExist())
+					{
+						temp_pos = myWorld->getPortal2()->getWPosition();
+						player->setDir(myWorld->getPortal2()->getDir());
+					}
 				} else {
-					temp_pos = myWorld->getPortal1()->getWPosition();
+					if (myWorld->getPortal1()->doesExist())
+					{
+						temp_pos = myWorld->getPortal1()->getWPosition();
+						player->setDir(myWorld->getPortal1()->getDir());
+					}
 				}
 			}
 			break;
@@ -790,9 +798,18 @@ void updateForJumping(Character* player, World* myWorld)
 	}
 }
 
-void updatePortalShot(WO_PortalShot* shot, int time)
+bool updatePortalShot(World* myWorld, int time) //returns true if update successful
 {
-	int t = time - shot->getStartTime(); //time since shot was fired
-	Vec3D new_pos = shot->getStartPos() + t*step_size*shot->getDir();
-	shot->setWPosition(new_pos);
+	int t = time - myWorld->getShot()->getStartTime(); //time since shot was fired
+	Vec3D temp_pos = myWorld->getShot()->getStartPos() + t*step_size*myWorld->getShot()->getDir();
+	Intersection iSect = myWorld->checkCollision(temp_pos);
+	WorldObject* collided_obj = iSect.getObject();
+	if (collided_obj != nullptr)
+	{
+		myWorld->getShot()->setWPosition(temp_pos);
+		return true;
+	} else {
+		cout << "out of bounds" << endl;
+		return false;
+	}
 }

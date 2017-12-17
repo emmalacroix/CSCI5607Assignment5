@@ -14,7 +14,7 @@ WO_Portal::WO_Portal()
 	total_vertices = 0;
 	mat = Material();
 	exists = false;
-	rotated = false;
+	dir = Vec3D();
 }
 
 WO_Portal::~WO_Portal()
@@ -29,9 +29,9 @@ void WO_Portal::setExists(bool b)
 	exists = b;
 }
 
-void WO_Portal::setRotated(bool b)
+void WO_Portal::setDir(Vec3D d)
 {
-	rotated = b;
+	dir = d;
 }
 
 /*----------------------------*/
@@ -42,9 +42,9 @@ bool WO_Portal::doesExist()
 	return exists;
 }
 
-bool WO_Portal::isRotated()
+Vec3D WO_Portal::getDir()
 {
-	return rotated;
+	return dir;
 }
 
 /*----------------------------*/
@@ -66,9 +66,9 @@ void WO_Portal::draw(Camera* cam, GLuint shaderProgram)
 
 	//build model mat specific to this WObj
 	model = glm::translate(model, pos_v);
-	if (rotated)
+	if (dir.getX() == 1 || dir.getX() == -1)
 	{
-		model = glm::rotate(model, 1.57f, glm::vec3(0, 1, 0));
+		model = glm::rotate(model, 1.57f, glm::vec3(0, 1, 0)); //rotate model 90 degrees
 	}
 	//model = glm::translate(model, pos_v);
 	model = glm::scale(model, size_v);

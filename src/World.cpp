@@ -373,9 +373,12 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 		shot->draw(cam, shaderProgram);
 	}
 
-	if (portal1->doesExist() && portal2->doesExist())
+	if (portal1->doesExist())
 	{
 		portal1->draw(cam, shaderProgram);
+	}
+	if (portal2->doesExist())
+	{
 		portal2->draw(cam, shaderProgram);
 	}
 }
@@ -394,61 +397,50 @@ Intersection World::checkCollision(Vec3D pos)
 		pos.getY() < num_levels*cell_width
 		)
 	{
+		//first check and see if collision with portal
 		if (portal1->doesExist())
 		{
-			if (portal1->isRotated())
-			{
-				if (pos.getX() >= portal1->getWPosition().getX()-.01 &&
-					pos.getX() < portal1->getWPosition().getX()+.01 &&
-					pos.getY() >= portal1->getWPosition().getY()-.33 &&
-					pos.getY() < portal1->getWPosition().getY()+.33 &&
-					pos.getZ() >= portal1->getWPosition().getZ()-.17 &&
-					pos.getZ() < portal1->getWPosition().getZ()+.17 
-					)
-				{
-					iSect.setObject(portal1);
-					return iSect;
-				} else if (pos.getX() >= portal1->getWPosition().getX()-.17 &&
-						pos.getX() < portal1->getWPosition().getX()+.17 &&
-						pos.getY() >= portal1->getWPosition().getY()-.33 &&
-						pos.getY() < portal1->getWPosition().getY()+.33 &&
-						pos.getZ() >= portal1->getWPosition().getZ()-.01 &&
-						pos.getZ() < portal1->getWPosition().getZ()+.01 
-						)
-				{
-					iSect.setObject(portal1);
-					return iSect;
-				}
-			}
+			iSect = checkPortalCollision(portal1, pos);
+			if (iSect.getObject() != nullptr) return iSect;
 		}
 		if (portal2->doesExist())
 		{
-			if (portal2->isRotated())
-			{
-				if (pos.getX() >= portal2->getWPosition().getX()-.01 &&
-					pos.getX() < portal2->getWPosition().getX()+.01 &&
-					pos.getY() >= portal2->getWPosition().getY()-.33 &&
-					pos.getY() < portal2->getWPosition().getY()+.33 &&
-					pos.getZ() >= portal2->getWPosition().getZ()-.17 &&
-					pos.getZ() < portal2->getWPosition().getZ()+.17 
-					)
-				{
-					iSect.setObject(portal2);
-					return iSect;
-				} else if (pos.getX() >= portal2->getWPosition().getX()-.17 &&
-						pos.getX() < portal2->getWPosition().getX()+.17 &&
-						pos.getY() >= portal2->getWPosition().getY()-.33 &&
-						pos.getY() < portal2->getWPosition().getY()+.33 &&
-						pos.getZ() >= portal2->getWPosition().getZ()-.01 &&
-						pos.getZ() < portal2->getWPosition().getZ()+.01 
-						)
-				{
-					iSect.setObject(portal2);
-					return iSect;
-				}
-			}
+			iSect = checkPortalCollision(portal2, pos);
+			if (iSect.getObject() != nullptr) return iSect;
 		}
+
 		iSect.setObject(getWO(pos));
+	}
+	return iSect;
+}
+
+Intersection World::checkPortalCollision(WO_Portal* portal, Vec3D pos)
+{
+	Intersection iSect;
+
+	if (portal->getDir().getX() == 1 || portal->getDir().getX() == -1)
+	{
+		if (pos.getX() >= portal->getWPosition().getX()-.01 &&
+			pos.getX() < portal->getWPosition().getX()+.01 &&
+			pos.getY() >= portal->getWPosition().getY()-.33 &&
+			pos.getY() < portal->getWPosition().getY()+.33 &&
+			pos.getZ() >= portal->getWPosition().getZ()-.17 &&
+			pos.getZ() < portal->getWPosition().getZ()+.17 
+			)
+		{
+			iSect.setObject(portal);
+		}
+	} else {
+		if (pos.getX() >= portal->getWPosition().getX()-.17 &&
+			pos.getX() < portal->getWPosition().getX()+.17 &&
+			pos.getY() >= portal->getWPosition().getY()-.33 &&
+			pos.getY() < portal->getWPosition().getY()+.33 &&
+			pos.getZ() >= portal->getWPosition().getZ()-.01 &&
+			pos.getZ() < portal->getWPosition().getZ()+.01 
+			)
+		{
+			iSect.setObject(portal);
+		}
 	}
 	return iSect;
 }

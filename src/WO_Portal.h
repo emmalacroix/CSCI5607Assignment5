@@ -5,8 +5,8 @@
 class WO_Portal : public WorldObject
 {
 private:
-	bool rotated;
 	bool exists;
+	Vec3D dir;
 
 public:
 	//CONSTRUCTORS AND DESTRUCTORS
@@ -14,12 +14,12 @@ public:
 	~WO_Portal();
 
 	//SETTERS
-	void setRotated(bool b);
 	void setExists(bool b);
+	void setDir(Vec3D d);
 
 	//GETTERS
-	bool isRotated();
 	bool doesExist();
+	Vec3D getDir();
 
 	//VIRTUAL
 	int getType();

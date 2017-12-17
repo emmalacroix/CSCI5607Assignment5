@@ -18,7 +18,7 @@ public:
 	int getType();
 
 	//OTHER
-	bool rotatePortal(Vec3D pos);
+	Vec3D setPortalDirection(Vec3D pos);
 };
 
 #endif
