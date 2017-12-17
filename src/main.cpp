@@ -54,7 +54,7 @@ const float mouse_speed = 10;
 
 #ifdef __APPLE__
 const float step_size = 0.006f * cell_width;
-const float acceleration = 0.006f;
+const float acceleration = 0.1f;
 #else
 const float step_size = 0.002f * cell_width;
 const float acceleration = 0.002f;
@@ -71,12 +71,11 @@ ifstream checkSceneFile(char* fileName);
 SDL_Window* initSDL(SDL_GLContext& context);
 void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld);
 void mouseMove(SDL_MouseMotionEvent & event, Character* player, float horizontal_angle, float vertical_angle);
-bool checkPlayerPosition(Vec3D& temp_pos, World* myWorld, Character* player);
+bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player);
 bool updateCharacter(Character* player, World* myWorld);
 void updateForFalling(Character* player, World* myWorld);
 void updateForJumping(Character* player, World* myWorld);
-void updatePortalShot(WO_PortalShot* shot, int time);
-void onMouseClick(SDL_MouseButtonEvent& event, Character* player, World* myWorld);
+bool updatePortalShot(World* myWorld, int time);
 
 int main(int argc, char *argv[]) {
 	/////////////////////////////////
@@ -118,7 +117,7 @@ int main(int argc, char *argv[]) {
 	World* myWorld = new World();
 
 	int total_verts = 0;
-	
+
 	//CUBE
 	int CUBE_VERTS = 0;
 	float* cubeData = util::loadModel("models/cube.txt", CUBE_VERTS);
@@ -165,8 +164,8 @@ int main(int argc, char *argv[]) {
 	/////////////////////////////////
 	myWorld->setCellWidth(cell_width);
 	cout << "\nCell width set to " << cell_width << endl;
-	myWorld->setCollisionRadius(cell_width/2.0);
-	cout << "\nCollision radius set to " << cell_width/2.0 << endl;
+	myWorld->setCollisionRadius(cell_width / 2.0);
+	cout << "\nCollision radius set to " << cell_width / 2.0 << endl;
 
 	if (!myWorld->parseFile(scene_input))
 	{
@@ -198,11 +197,12 @@ int main(int argc, char *argv[]) {
 	player->setUp(Vec3D(0, 1, 0));					//map is in xz plane
 	player->setRight(Vec3D(0, 0, 1));				//look along +x
 	player->setJumpStart(-jump_duration);			//not jumping at start of program
+	//player->setTraveling(false);					//not traveling through a portal at start
 
-	////////////////////////////////////////////////////
-	//MOUSE : keep track of angle the mouse has changed
-	//			player view through!
-	////////////////////////////////////////////////////
+													////////////////////////////////////////////////////
+													//MOUSE : keep track of angle the mouse has changed
+													//			player view through!
+													////////////////////////////////////////////////////
 	float horizontal_angle = 0;
 	float vertical_angle = 0;
 
@@ -210,7 +210,8 @@ int main(int argc, char *argv[]) {
 	//PORTALS
 	/////////////////////////////////
 	//testing testing
-	myWorld->movePortal(myWorld->getPortal1(), start_pos);
+	//myWorld->movePortal(myWorld->getPortal1(), start_pos);
+	//myWorld->movePortal(myWorld->getPortal2(), start_pos+Vec3D(1,0,0));
 
 	/////////////////////////////////
 	//BUILD VERTEX ARRAY OBJECT
@@ -220,28 +221,28 @@ int main(int argc, char *argv[]) {
 	glGenVertexArrays(1, &vao); //Create a VAO
 	glBindVertexArray(vao); //Bind the above created VAO to the current context
 
-	/////////////////////////////////
-	//BUILD VERTEX BUFFER OBJECT
-	/////////////////////////////////
-	//Allocate memory on the graphics card to store geometry (vertex buffer object)
+							/////////////////////////////////
+							//BUILD VERTEX BUFFER OBJECT
+							/////////////////////////////////
+							//Allocate memory on the graphics card to store geometry (vertex buffer object)
 	GLuint vbo[1];
 	glGenBuffers(1, vbo);  //Create 1 buffer called vbo
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]); //Set the vbo as the active array buffer (Only one buffer can be active at a time)
 	glBufferData(GL_ARRAY_BUFFER, total_verts * 8 * sizeof(float), modelData, GL_STATIC_DRAW); //upload vertices to vbo
-	//GL_STATIC_DRAW means we won't change the geometry, GL_DYNAMIC_DRAW = geometry changes infrequently
-	//GL_STREAM_DRAW = geom. changes frequently.  This effects which types of GPU memory is used
+																							   //GL_STATIC_DRAW means we won't change the geometry, GL_DYNAMIC_DRAW = geometry changes infrequently
+																							   //GL_STREAM_DRAW = geom. changes frequently.  This effects which types of GPU memory is used
 
-	/////////////////////////////////
-	//SETUP SHADERS
-	/////////////////////////////////
+																							   /////////////////////////////////
+																							   //SETUP SHADERS
+																							   /////////////////////////////////
 	GLuint shaderProgram = util::LoadShader("Shaders/phongTex.vert", "Shaders/phongTex.frag");
 
 	//load in textures
-	GLuint tex0 = util::LoadTexture("textures/wood.bmp");
-	GLuint tex1 = util::LoadTexture("textures/metal_floor.bmp");
-	GLuint tex2 = util::LoadTexture("textures/metal_wall.bmp");
+	GLuint tex0 = util::LoadTexture("textures/metal_wall.bmp");
+	GLuint tex1 = util::LoadTexture("textures/metal_floor2.bmp");
+	GLuint tex2 = util::LoadTexture("textures/wood.bmp");
 
-	if (tex0 == -1 || tex1 == -1 || shaderProgram == -1)
+	if (tex0 == -1 || tex1 == -1 || tex2 == -1 || shaderProgram == -1)
 	{
 		//Clean Up
 		SDL_GL_DeleteContext(context);
@@ -267,8 +268,9 @@ int main(int argc, char *argv[]) {
 	glEnableVertexAttribArray(normAttrib);
 
 	GLint texAttrib = glGetAttribLocation(shaderProgram, "inTexcoord");
-	glEnableVertexAttribArray(texAttrib);
+	//glEnableVertexAttribArray(texAttrib);
 	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(texAttrib);
 
 	glBindVertexArray(0); //Unbind the VAO in case we want to create a new one
 
@@ -284,6 +286,8 @@ int main(int argc, char *argv[]) {
 	bool complete = false;
 	bool mouseActive = false;
 	bool recenterMouse = false;
+	Vec3D front_pos;
+	Intersection sect;
 
 	while (!quit && !complete)
 	{
@@ -291,62 +295,75 @@ int main(int argc, char *argv[]) {
 		{
 			switch (windowEvent.type)
 			{
-				case SDL_QUIT:
-						quit = true; //Exit event loop
-						break;
-				case SDL_KEYUP:
-					player->setVelocity(Vec3D(0, 0, 0));
-					break;
-				case SDL_KEYDOWN:
-					//check for escape or fullscreen before checking other commands
-					if (windowEvent.key.keysym.sym == SDLK_ESCAPE) quit = true; //Exit event loop
-					else if (windowEvent.key.keysym.sym == SDLK_f) fullscreen = !fullscreen;
-					onKeyDown(windowEvent.key, player, myWorld);
-					break;
-				case SDL_MOUSEMOTION:
-					if (mouseActive)
-					{
-						mouseMove(windowEvent.motion, player, horizontal_angle, vertical_angle);
-						recenterMouse = true;
-					} else {
-						SDL_WarpMouseInWindow(window, screen_width/2, screen_height/2);
-						mouseActive = true;
-					}
-				/*case SDL_MOUSEBUTTONUP:
-					//cout << "Mouse button down" << endl;
-					//onMouseClick(windowEvent.button, player, myWorld);
-					if (windowEvent.button.button == SDL_BUTTON_LEFT)
-					{
-						cout << "Left mouse button pressed" << endl;
-						myWorld->shootPortal(player->getPos(), player->getDir(), SDL_GetTicks(), myWorld->getPortal1());
-					}
-					else if (windowEvent.button.button == SDL_BUTTON_RIGHT)
-
-						cout << "Right mouse button pressed" << endl; {
-						myWorld->shootPortal(player->getPos(), player->getDir(), SDL_GetTicks(), myWorld->getPortal2());
-					}*/
-				default:
-					break;
+			case SDL_QUIT:
+				quit = true; //Exit event loop
+				break;
+			case SDL_KEYUP:
+				player->setVelocity(Vec3D(0, 0, 0));
+				break;
+			case SDL_KEYDOWN:
+				//check for escape or fullscreen before checking other commands
+				if (windowEvent.key.keysym.sym == SDLK_ESCAPE) quit = true; //Exit event loop
+				else if (windowEvent.key.keysym.sym == SDLK_f) fullscreen = !fullscreen;
+				onKeyDown(windowEvent.key, player, myWorld);
+				break;
+			case SDL_MOUSEMOTION:
+				if (mouseActive)
+				{
+					mouseMove(windowEvent.motion, player, horizontal_angle, vertical_angle);
+					recenterMouse = true;
+				}
+				else {
+					SDL_WarpMouseInWindow(window, screen_width / 2, screen_height / 2);
+					mouseActive = true;
+				}
+			case SDL_MOUSEBUTTONDOWN:
+				if (windowEvent.button.button == SDL_BUTTON_LEFT)
+				{
+					myWorld->shootPortal(player->getPos(), player->getDir(), SDL_GetTicks(), myWorld->getPortal1());
+				}
+				else if (windowEvent.button.button == SDL_BUTTON_RIGHT) {
+					myWorld->shootPortal(player->getPos(), player->getDir(), SDL_GetTicks(), myWorld->getPortal2());
+				}
+			default:
+				break;
 			}//END polling switch
 
 			SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0); //Set to full screen
 		}//END polling while
 
-		// if (recenterMouse)
-		// {
-		// 	SDL_WarpMouseInWindow(window, screen_width/2, screen_height/2);
-		// }
+		 // if (recenterMouse)
+		 // {
+		 // 	SDL_WarpMouseInWindow(window, screen_width/2, screen_height/2);
+		 // }
 
 		if (myWorld->getShot()->shooting())
 		{
-			updatePortalShot(myWorld->getShot(), SDL_GetTicks());
-			// Vec3D front_pos = myWorld->getShot()->getWPosition() + 0.5*myWorld->getCollisionRadius()*myWorld->getShot()->getDir();
-			// Intersection iSect = myWorld->checkCollision(front_pos);
-			// if (iSect.getObject()->getType() == WALL_WOBJ)
-			// {
-			// 	myWorld->movePortal(myWorld->getShot()->getPortal(), myWorld->getShot()->getWPosition());
-			// 	myWorld->getShot()->ceaseShot();
-			// }
+			if (updatePortalShot(myWorld, SDL_GetTicks()))
+			{
+				front_pos = myWorld->getShot()->getWPosition() + 0.5*myWorld->getCollisionRadius()*myWorld->getShot()->getDir();
+				sect = myWorld->checkCollision(front_pos);
+				if (sect.getObject() != nullptr && sect.getObject()->getType() == WALL_WOBJ)
+				{
+					cout << "Shot hit a wall - Creating portal" << endl;
+					WO_Wall * wall = (WO_Wall *)sect.getObject();
+
+					if (wall->getIntersection(front_pos, myWorld->getShot()->getDir(), sect))
+					{
+						sect.setObject(wall);
+						cout << "Placing portal at : ";
+						sect.getPoint().print();
+						myWorld->getShot()->getPortal()->setWPosition(sect.getPoint());
+						myWorld->getShot()->getPortal()->setNorm(wall->setPortalDirection(myWorld->getShot()->getWPosition()));
+						myWorld->movePortal(myWorld->getShot()->getPortal(), myWorld->getShot()->getWPosition());
+						myWorld->getShot()->ceaseShot();
+					}
+				}
+			}
+			else {
+				cout << "out of bounds" << endl;
+				myWorld->getShot()->ceaseShot();
+			}
 		}
 
 		updateForFalling(player, myWorld);
@@ -366,16 +383,16 @@ int main(int argc, char *argv[]) {
 
 		glUseProgram(shaderProgram); //Set the active shader (only one can be used at a time)
 
-		//vertex shader uniforms
+									 //vertex shader uniforms
 		GLint uniView = glGetUniformLocation(shaderProgram, "view");
 		GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
 		GLint uniTexID = glGetUniformLocation(shaderProgram, "texID");
 
 		//build view matrix from Camera
 		glm::mat4 view = glm::lookAt(
-		util::vec3DtoGLM(cam->getPos()),
-		util::vec3DtoGLM(cam->getPos() + cam->getDir()),  //Look at point
-		util::vec3DtoGLM(cam->getUp()));
+			util::vec3DtoGLM(cam->getPos()),
+			util::vec3DtoGLM(cam->getPos() + cam->getDir()),  //Look at point
+			util::vec3DtoGLM(cam->getUp()));
 
 		glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
 
@@ -390,6 +407,10 @@ int main(int argc, char *argv[]) {
 		glBindTexture(GL_TEXTURE_2D, tex1);
 		glUniform1i(glGetUniformLocation(shaderProgram, "tex1"), 1);
 
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, tex2);
+		glUniform1i(glGetUniformLocation(shaderProgram, "tex2"), 2);
+
 		glBindVertexArray(vao);
 
 		//draw all WObjs
@@ -399,9 +420,9 @@ int main(int argc, char *argv[]) {
 		SDL_GL_SwapWindow(window);
 
 	}//END event loop
-	
 
-	//Clean Up
+
+	 //Clean Up
 	SDL_GL_DeleteContext(context);
 	SDL_Quit();
 	myWorld->~World();
@@ -412,16 +433,16 @@ int main(int argc, char *argv[]) {
 	delete[] sphereData;
 
 	return 0;
-	}
+}
 
-	/*--------------------------------------------------------------*/
-	// initSDL : initializes SDL and returns window pointer
-	/*--------------------------------------------------------------*/
-	SDL_Window* initSDL(SDL_GLContext& context)
-	{
+/*--------------------------------------------------------------*/
+// initSDL : initializes SDL and returns window pointer
+/*--------------------------------------------------------------*/
+SDL_Window* initSDL(SDL_GLContext& context)
+{
 	SDL_Init(SDL_INIT_VIDEO);  //Initialize Graphics (for OpenGL)
 
-	//Ask SDL to get a recent version of OpenGL (3.2 or greater)
+							   //Ask SDL to get a recent version of OpenGL (3.2 or greater)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
@@ -430,7 +451,7 @@ int main(int argc, char *argv[]) {
 	SDL_Window* window = SDL_CreateWindow("My OpenGL Program", 100, 100, screen_width, screen_height, SDL_WINDOW_OPENGL);
 	float aspect = screen_width / (float)screen_height; //aspect ratio (needs to be updated if the window is resized)
 
-	//Create a context to draw in
+														//Create a context to draw in
 	context = SDL_GL_CreateContext(window);
 
 	if (gladLoadGLLoader(SDL_GL_GetProcAddress)) {
@@ -488,17 +509,18 @@ void mouseMove(SDL_MouseMotionEvent & event, Character* player, float horizontal
 	Vec3D temp_right = right;
 	Vec3D temp_up = up;
 
-	horizontal_angle += mouse_speed * step_size * float(screen_width/2 - event.x);
-	vertical_angle += mouse_speed * step_size * float(screen_height/2 - event.y);
+	horizontal_angle += mouse_speed * step_size * float(screen_width / 2 - event.x);
+	vertical_angle += mouse_speed * step_size * float(screen_height / 2 - event.y);
 
 	temp_dir = dir + (Vec3D(cos(vertical_angle) * sin(horizontal_angle), sin(vertical_angle), cos(vertical_angle) * cos(horizontal_angle)));
-	temp_right = right + (Vec3D(sin(horizontal_angle - 3.14f/2.0f), 0, cos(horizontal_angle - 3.14f/2.0f)));
+	temp_right = right + (Vec3D(sin(horizontal_angle - 3.14f / 2.0f), 0, cos(horizontal_angle - 3.14f / 2.0f)));
 	temp_up = cross(temp_dir, -1 * temp_right);
 
 	player->setDir(temp_dir);
 	player->setRight(temp_right);
-	player->setUp(temp_up);	
+	player->setUp(temp_up);
 }
+
 
 /*--------------------------------------------------------------*/
 // onKeyDown : determine which key was pressed and how to edit
@@ -522,16 +544,16 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 
 	switch (event.keysym.sym)
 	{
-	/////////////////////////////////
-	//TRANSLATION WITH WASD
-	/////////////////////////////////
+		/////////////////////////////////
+		//TRANSLATION WITH WASD		   //
+		/////////////////////////////////
 	case SDLK_w:
 		//printf("Up arrow pressed - step forward\n");
 		player->setVelocity(Vec3D(step_size*dir.getX(), 0, step_size*dir.getZ()));
 		break;
 	case SDLK_s:
 		//printf("Down arrow pressed - step backward\n");
-		player->setVelocity(Vec3D(-1*step_size*dir.getX(), 0, -1*step_size*dir.getZ()));
+		player->setVelocity(Vec3D(-1 * step_size*dir.getX(), 0, -1 * step_size*dir.getZ()));
 		break;
 	case SDLK_d:
 		//printf("Right arrow pressed - step to the right\n");
@@ -539,35 +561,47 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		break;
 	case SDLK_a:
 		//printf("Left arrow pressed - step to the left\n");
-		player->setVelocity(Vec3D(-1*step_size*right.getX(), 0, -1*step_size*right.getZ()));
+		player->setVelocity(Vec3D(-1 * step_size*right.getX(), 0, -1 * step_size*right.getZ()));
 		break;
-	////////////////////////////////
-	//JUMP WITH SPACEBAR
-	////////////////////////////////
+		////////////////////////////////
+		//TURNING WITH A/D KEYS		  //
+		////////////////////////////////
+		/*case SDLK_d:
+		//printf("D key pressed - turn to the right\n");
+		temp_dir = dir + (50*step_size*right);
+		temp_right = cross(temp_dir, up); //calc new right using new dir
+		break;
+		case SDLK_a:
+		//printf("A key pressed - turn to the left\n");
+		temp_dir = dir - (50*step_size*right);
+		temp_right = cross(temp_dir, up); //calc new right using new dir
+		break;*/
+		////////////////////////////////
+		//TILTING WITH W/S KEYS		  //
+		////////////////////////////////
+		/*case SDLK_w:
+		//printf("W key pressed - tilt up\n");
+		temp_dir = dir + (50*step_size*up);
+		temp_up = cross(right, temp_dir); //calc new up using new dir
+		break;
+		case SDLK_s:
+		//printf("S key pressed - tilt down\n");
+		temp_dir = dir - (50*step_size*up);
+		temp_up = cross(right, temp_dir); //calc new up using new dir
+		break;*/
+		////////////////////////////////
+		//JUMP WITH SPACEBAR		  //
+		////////////////////////////////
 	case SDLK_SPACE:
 	{
 		int time = SDL_GetTicks();
 		if (time - player->getJumpStart() > jump_duration)
-		//we are not already jumping
+			//we are not already jumping
 		{
 			player->setJumpStart(time);
 		}
 		break;
 	}
-
-	////////////////////////////////
-	//SHOOT PORTAL GUN WITH ???   //
-	////////////////////////////////
-	// case SDLK_SPACE:
-	// {
-	// 	bool collided = false;
-	// 	float t = test_increment;
-	// 	while (!collided && t < shooting_range){
-	// 		if 
-
-	// 		t += test_increment;
-	// 	}
-	// }
 
 	////////////////////////////////
 	//PICK UP ITEM WITH E		  //
@@ -596,16 +630,13 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		break;
 	}//END switch key press
 
-	//new dir, right, and up aren't affected by collisions
+	 //new dir, right, and up aren't affected by collisions
 	player->setDir(temp_dir);
 	player->setRight(temp_right);
-	player->setUp(temp_up);	
+	player->setUp(temp_up);
 }//END onKeyDown
 
-/*--------------------------------------------------------------*/
-// checkPlayerPosition : 
-/*--------------------------------------------------------------*/
-bool checkPlayerPosition(Vec3D& temp_pos, World* myWorld, Character* player)
+bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 {
 	Vec3D pos = player->getPos();
 
@@ -702,17 +733,14 @@ bool checkPlayerPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 	}
 
 	return false;
-}//END checkPlayerPosition
+}//END checkPosition
 
-/*--------------------------------------------------------------*/
-// updateCharacter : 
-/*--------------------------------------------------------------*/
 bool updateCharacter(Character * player, World * myWorld)
 {
 
 	Vec3D temp_pos = player->getPos() + player->getVelocity();
 
-	if (!checkPlayerPosition(temp_pos, myWorld, player))
+	if (!checkPosition(temp_pos, myWorld, player))
 	{
 		player->setPos(temp_pos);
 		return false;
@@ -722,9 +750,6 @@ bool updateCharacter(Character * player, World * myWorld)
 	return true;
 }
 
-/*--------------------------------------------------------------*/
-// updateForFalling : 
-/*--------------------------------------------------------------*/
 void updateForFalling(Character * player, World * myWorld)
 {
 	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
@@ -743,10 +768,10 @@ void updateForFalling(Character * player, World * myWorld)
 			if (!(under_obj->getType() == WALL_WOBJ) && !(under_obj->getType() == DOOR_WOBJ) && !(under_obj->getType() == PORTAL_WOBJ))
 			{
 				Vec3D vel = player->getVelocity();
-				Vec3D down = Vec3D(0,-1,0);
+				Vec3D down = Vec3D(0, -1, 0);
 
 				//if they are parallel, then it was already falling
-				if (!(vel == Vec3D(0,0,0)) && (cross(vel, -1 * up) == Vec3D(0, 0, 0)))
+				if (!(vel == Vec3D(0, 0, 0)) && (cross(vel, -1 * up) == Vec3D(0, 0, 0)))
 				{
 					player->setVelocity((step_size + acceleration)*down);
 				}
@@ -760,9 +785,6 @@ void updateForFalling(Character * player, World * myWorld)
 	}
 }
 
-/*--------------------------------------------------------------*/
-// updateForJumping : 
-/*--------------------------------------------------------------*/
 void updateForJumping(Character* player, World* myWorld)
 {
 	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
@@ -772,7 +794,7 @@ void updateForJumping(Character* player, World* myWorld)
 		Vec3D dir = player->getDir();
 		Vec3D right = player->getRight();
 		Vec3D up = player->getUp();
-		
+
 		Intersection above_sect = myWorld->checkCollision(pos + 0.1*up);
 		WorldObject* above_obj = above_sect.getObject();
 
@@ -780,34 +802,27 @@ void updateForJumping(Character* player, World* myWorld)
 		{
 			if (!(above_obj->getType() == WALL_WOBJ) && !(above_obj->getType() == DOOR_WOBJ) && !(above_obj->getType() == PORTAL_WOBJ))
 			{
-				float x = (float)t/(float)jump_duration;
-				float y = 4-8*x; //derivative of y=-(1/4)*(4x-2)^2+1 (nicely arched jump parabola)
+				float x = (float)t / (float)jump_duration;
+				float y = 4 - 8 * x; //derivative of y=-(1/4)*(4x-2)^2+1 (nicely arched jump parabola)
 				player->setVelocity(Vec3D(fabs(y)*jump_height*step_size*up.getX(), y*jump_height*step_size*up.getY(), fabs(y)*jump_height*step_size*up.getZ()));
 			}
-		}	
+		}
 	}
 }
 
-/*--------------------------------------------------------------*/
-// updatePortalShot : 
-/*--------------------------------------------------------------*/
-void updatePortalShot(WO_PortalShot* shot, int time)
+bool updatePortalShot(World* myWorld, int time) //returns true if update successful
 {
-	int t = time - shot->getStartTime(); //time since shot was fired
-	Vec3D new_pos = shot->getStartPos() + t*step_size*shot->getDir();
-	shot->setWPosition(new_pos);
-}
-
-void onMouseClick(SDL_MouseButtonEvent & event, Character* player, World * myWorld)
-{
-	if (event.button == SDL_BUTTON_LEFT)
+	int t = time - myWorld->getShot()->getStartTime(); //time since shot was fired
+	Vec3D temp_pos = myWorld->getShot()->getStartPos() + t*step_size*myWorld->getShot()->getDir();
+	Intersection iSect = myWorld->checkCollision(temp_pos);
+	WorldObject* collided_obj = iSect.getObject();
+	if (collided_obj != nullptr)
 	{
-		cout << "Left mouse button pressed" << endl;
-		myWorld->shootPortal(player->getPos(), player->getDir(), SDL_GetTicks(), myWorld->getPortal1());
+		myWorld->getShot()->setWPosition(temp_pos);
+		return true;
 	}
-	else if (event.button == SDL_BUTTON_RIGHT)
-	
-		cout << "Right mouse button pressed" << endl; {
-		myWorld->shootPortal(player->getPos(), player->getDir(), SDL_GetTicks(), myWorld->getPortal2());
+	else {
+		cout << "out of bounds" << endl;
+		return false;
 	}
 }

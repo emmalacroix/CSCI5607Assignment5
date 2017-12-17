@@ -14,6 +14,7 @@ WO_Portal::WO_Portal()
 	total_vertices = 0;
 	mat = Material();
 	exists = false;
+	normal = Vec3D();
 }
 
 WO_Portal::~WO_Portal()
@@ -28,12 +29,22 @@ void WO_Portal::setExists(bool b)
 	exists = b;
 }
 
+void WO_Portal::setNorm(Vec3D n)
+{
+	normal = n;
+}
+
 /*----------------------------*/
 // GETTERS
 /*----------------------------*/
 bool WO_Portal::doesExist()
 {
 	return exists;
+}
+
+Vec3D WO_Portal::getNorm()
+{
+	return normal;
 }
 
 /*----------------------------*/

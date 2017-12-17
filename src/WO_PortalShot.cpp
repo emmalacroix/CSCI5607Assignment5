@@ -8,7 +8,6 @@ WO_PortalShot::WO_PortalShot()
 {
 	start_time = 0;
 	start_pos = Vec3D();
-	world_pos = Vec3D();
 	dir = Vec3D();
 	portal = nullptr;
 	active = false;
@@ -17,7 +16,7 @@ WO_PortalShot::WO_PortalShot()
 
 WO_PortalShot::~WO_PortalShot()
 {
-	
+
 }
 
 /*----------------------------*/
@@ -38,7 +37,7 @@ void WO_PortalShot::setDir(Vec3D d)
 	dir = d;
 }
 
-void WO_PortalShot::setPortal(WO_Portal* port)
+void WO_PortalShot::setPortal(WO_Portal * port)
 {
 	portal = port;
 }

@@ -243,7 +243,7 @@ bool World::parseFile(ifstream & input)
 
 		}//END line parsing For
 
-		//plug filled in level into levels array if done reading all rows in a level
+		 //plug filled in level into levels array if done reading all rows in a level
 		if (row_num == height - 1)
 		{
 			//levels_array[level_num] = level;
@@ -285,9 +285,9 @@ bool World::parseFile(ifstream & input)
 	mat1.setSpecular(glm::vec3(0, 0, 0));
 
 	portal1->setMaterial(mat1);
-	portal1->setSize(Vec3D(cell_width/3, cell_width/3, 0.01)); //xy plane
+	portal1->setSize(Vec3D(cell_width / 3, cell_width / 3, 0.01)); //xy plane
 
-	//portal #2
+																   //portal #2
 	portal2 = new WO_Portal();
 	portal2->setVertStartIndex(OVAL_START);
 	portal2->setTotalVertices(OVAL_VERTS);
@@ -298,9 +298,9 @@ bool World::parseFile(ifstream & input)
 	mat2.setSpecular(glm::vec3(0, 0, 0));
 
 	portal2->setMaterial(mat2);
-	portal2->setSize(Vec3D(cell_width/3, cell_width/3, 0.01)); //xy plane
-	
-	//initialize portal shot
+	portal2->setSize(Vec3D(cell_width / 3, cell_width / 3, 0.01)); //xy plane
+
+																   //initialize portal shot
 	shot = new WO_PortalShot();
 	shot->setVertStartIndex(SPHERE_START);
 	shot->setTotalVertices(SPHERE_VERTS);
@@ -415,29 +415,8 @@ void World::shootPortal(Vec3D pos, Vec3D dir, int time, WO_Portal* portal)
 	shot->setStartPos(pos);
 	shot->setWPosition(pos);
 	shot->setDir(dir);
+	shot->setPortal(portal);
 	shot->setMaterial(portal->getMaterial());
-
-	//loop through and extend pos
-	/*for (int i = 0; i < 3; i++)
-	{
-		Intersection iSect = checkCollision(pos + cell_width*i*dir);
-
-		if (iSect.getObject() == nullptr) break;
-
-		WorldObject* col_obj = iSect.getObject();
-
-		if (col_obj->getType() == WALL_WOBJ)
-		{
-			WO_Wall* wall = (WO_Wall*)col_obj;
-
-			if (wall->getIntersection(pos, dir, iSect))
-			{
-				iSect.setObject(wall);
-				iSect.getPoint().print();
-				portal->setWPosition(iSect.getPoint());
-			}
-		}
-	}*/
 }
 
 /*----------------------------*/

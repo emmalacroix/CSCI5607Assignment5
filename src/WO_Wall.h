@@ -20,6 +20,7 @@ public:
 
 	//OTHERS
 	bool getIntersection(Vec3D origin, Vec3D dir, Intersection& iSect);
+	Vec3D setPortalDirection(Vec3D pos);
 };
 
 #endif

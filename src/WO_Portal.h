@@ -21,9 +21,11 @@ public:
 
 	//SETTERS
 	void setExists(bool b);
+	void setNorm(Vec3D n);
 
 	//GETTERS
 	bool doesExist();
+	Vec3D getNorm();
 
 	//VIRTUAL
 	int getType();
