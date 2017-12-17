@@ -197,6 +197,7 @@ int main(int argc, char *argv[]) {
 	player->setUp(Vec3D(0, 1, 0));					//map is in xz plane
 	player->setRight(Vec3D(0, 0, 1));				//look along +x
 	player->setJumpStart(-jump_duration);			//not jumping at start of program
+	player->setTraveling(false);					//not traveling through a portal at start
 
 	////////////////////////////////////////////////////
 	//MOUSE : keep track of angle the mouse has changed
@@ -209,8 +210,8 @@ int main(int argc, char *argv[]) {
 	//PORTALS
 	/////////////////////////////////
 	//testing testing
-	myWorld->movePortal(myWorld->getPortal1(), start_pos);
-	myWorld->movePortal(myWorld->getPortal2(), start_pos+Vec3D(1,0,0));
+	//myWorld->movePortal(myWorld->getPortal1(), start_pos);
+	//myWorld->movePortal(myWorld->getPortal2(), start_pos+Vec3D(1,0,0));
 
 	/////////////////////////////////
 	//BUILD VERTEX ARRAY OBJECT
@@ -685,10 +686,24 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 			break;
 		case PORTAL_WOBJ:
 			cout << "Collided with a portal" << endl;
-
+			if (!player->isTraveling())
+			{
+				player->enterPortal();
+				WO_Portal * portal = (WO_Portal *)collided_obj;
+				if (portal == myWorld->getPortal1())
+				{
+					temp_pos = myWorld->getPortal2()->getWPosition();
+				} else {
+					temp_pos = myWorld->getPortal1()->getWPosition();
+				}
+			}
 			break;
 		default:
 			//collided with start -- do nothing
+			if (player->isTraveling()) //we were previously traveling through a portal
+			{
+				player->exitPortal(); //no longer traveling through portal
+			}
 			break;
 		}//END collision switch
 	}

@@ -24,6 +24,7 @@ private:
 	//used for updating
 	Vec3D vel_VEC;
 	int jump_start; //start time of most recent jump
+	bool portal_traveling; //if character is currently "traveling through a portal"
 
 public:
 	//CONSTRUCTORS AND DESTRUCTORS
@@ -37,6 +38,7 @@ public:
 	void setRight(Vec3D c);
 	void setVelocity(Vec3D v);
 	void setJumpStart(int s);
+	void setTraveling(bool b);
 
 	//GETTERS
 	Vec3D getPos();
@@ -47,12 +49,15 @@ public:
 	void nextItem();
 	Vec3D getVelocity();
 	int getJumpStart();
+	bool isTraveling();
 
 	//OTHERS
 	bool isInventoryEmpty();
 	void addToInventory(WorldObject* wobj);
 	void draw(Camera* cam, GLuint shaderProgram, World* myWorld, GLuint uniTexID);
 	bool hasKey(char c);
+	void enterPortal();
+	void exitPortal();
 
 };
 
