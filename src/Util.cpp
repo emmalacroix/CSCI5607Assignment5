@@ -20,10 +20,17 @@ float* util::loadModel(string filename, int& num_verts)
 
 	int numLines = 0;
 	modelFile >> numLines; //first number in the model file is the number of lines
+	float temp;
 
 	float* m_array = new float[numLines];
 	for (int i = 0; i < numLines; i++) {
-		modelFile >> m_array[i];
+		if (i % 8 == 3 || i % 8 == 4)
+		{
+			modelFile >> temp;
+			m_array[i] = 1*temp; //scales tex coord up
+		} else {
+			modelFile >> m_array[i];
+		}
 	}
 
 	cout << "\nLoaded model file " << filename << " successfully." << endl;

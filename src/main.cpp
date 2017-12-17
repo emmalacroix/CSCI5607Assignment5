@@ -54,7 +54,7 @@ const float mouse_speed = 10;
 
 #ifdef __APPLE__
 const float step_size = 0.006f * cell_width;
-const float acceleration = 0.006f;
+const float acceleration = 0.1f;
 #else
 const float step_size = 0.002f * cell_width;
 const float acceleration = 0.002f;
@@ -210,6 +210,7 @@ int main(int argc, char *argv[]) {
 	/////////////////////////////////
 	//testing testing
 	myWorld->movePortal(myWorld->getPortal1(), start_pos);
+	myWorld->movePortal(myWorld->getPortal2(), start_pos+Vec3D(1,0,0));
 
 	/////////////////////////////////
 	//BUILD VERTEX ARRAY OBJECT
@@ -236,11 +237,11 @@ int main(int argc, char *argv[]) {
 	GLuint shaderProgram = util::LoadShader("Shaders/phongTex.vert", "Shaders/phongTex.frag");
 
 	//load in textures
-	GLuint tex0 = util::LoadTexture("textures/wood.bmp");
-	GLuint tex1 = util::LoadTexture("textures/metal_floor.bmp");
-	GLuint tex2 = util::LoadTexture("textures/metal_wall.bmp");
+	GLuint tex0 = util::LoadTexture("textures/metal_wall.bmp");
+	GLuint tex1 = util::LoadTexture("textures/metal_floor2.bmp");
+	GLuint tex2 = util::LoadTexture("textures/wood.bmp");
 
-	if (tex0 == -1 || tex1 == -1 || shaderProgram == -1)
+	if (tex0 == -1 || tex1 == -1 || tex2 == -1 || shaderProgram == -1)
 	{
 		//Clean Up
 		SDL_GL_DeleteContext(context);
@@ -266,8 +267,9 @@ int main(int argc, char *argv[]) {
 	glEnableVertexAttribArray(normAttrib);
 
 	GLint texAttrib = glGetAttribLocation(shaderProgram, "inTexcoord");
-	glEnableVertexAttribArray(texAttrib);
+	//glEnableVertexAttribArray(texAttrib);
 	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(texAttrib);
 
 	glBindVertexArray(0); //Unbind the VAO in case we want to create a new one
 
@@ -283,6 +285,8 @@ int main(int argc, char *argv[]) {
 	bool complete = false;
 	bool mouseActive = false;
 	bool recenterMouse = false;
+	Vec3D front_pos;
+	Intersection sect;
 
 	while (!quit && !complete)
 	{
@@ -333,13 +337,14 @@ int main(int argc, char *argv[]) {
 		if (myWorld->getShot()->shooting())
 		{
 			updatePortalShot(myWorld->getShot(), SDL_GetTicks());
-			// Vec3D front_pos = myWorld->getShot()->getWPosition() + 0.5*myWorld->getCollisionRadius()*myWorld->getShot()->getDir();
-			// Intersection iSect = myWorld->checkCollision(front_pos);
-			// if (iSect.getObject()->getType() == WALL_WOBJ)
-			// {
-			// 	myWorld->movePortal(myWorld->getShot()->getPortal(), myWorld->getShot()->getWPosition());
-			// 	myWorld->getShot()->ceaseShot();
-			// }
+			front_pos = myWorld->getShot()->getWPosition() + 0.5*myWorld->getCollisionRadius()*myWorld->getShot()->getDir();
+			sect = myWorld->checkCollision(front_pos);
+			if (sect.getObject()->getType() == WALL_WOBJ)
+			{
+				cout << "Creating portal" << endl;
+				myWorld->movePortal(myWorld->getShot()->getPortal(), myWorld->getShot()->getWPosition());
+				myWorld->getShot()->ceaseShot();
+			}
 		}
 
 		updateForFalling(player, myWorld);
@@ -382,6 +387,10 @@ int main(int argc, char *argv[]) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, tex1);
 		glUniform1i(glGetUniformLocation(shaderProgram, "tex1"), 1);
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, tex2);
+		glUniform1i(glGetUniformLocation(shaderProgram, "tex2"), 2);
 
 		glBindVertexArray(vao);
 
@@ -574,20 +583,6 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		}
 		break;
 	}
-
-	////////////////////////////////
-	//SHOOT PORTAL GUN WITH ???   //
-	////////////////////////////////
-	// case SDLK_SPACE:
-	// {
-	// 	bool collided = false;
-	// 	float t = test_increment;
-	// 	while (!collided && t < shooting_range){
-	// 		if 
-
-	// 		t += test_increment;
-	// 	}
-	// }
 
 	////////////////////////////////
 	//PICK UP ITEM WITH E		  //

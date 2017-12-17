@@ -349,8 +349,12 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 					}
 
 					door->setWPosition(d_pos);
-					glUniform1i(uniTexID, 0); //Set texture ID to use (0 = wood texture)
+					glUniform1i(uniTexID, -1); //Set texture ID to use (0 = wood texture)
 				}//END DOOR_WOBJ if
+				else if (levels_array[lev][i]->getType() == WALL_WOBJ)
+				{
+					glUniform1i(uniTexID, 0);
+				}
 				else
 				{
 					glUniform1i(uniTexID, -1); //Set texture ID to use (-1 = no texture)
@@ -363,7 +367,7 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 	glUniform1i(uniTexID, 1); //Set texture ID to use for floor (1 = metal floor)
 	floor->draw(cam, shaderProgram);
 
-	glUniform1i(uniTexID, -1); //Set texture ID to use for floor (-1 = no texture)
+	glUniform1i(uniTexID, -1); //Set texture ID to use for projectile, portals (-1 = no texture)
 	if (shot->shooting())
 	{
 		shot->draw(cam, shaderProgram);
@@ -416,6 +420,7 @@ void World::shootPortal(Vec3D pos, Vec3D dir, int time, WO_Portal* portal)
 	shot->setStartPos(pos);
 	shot->setWPosition(pos);
 	shot->setDir(dir);
+	shot->setPortal(portal);
 	shot->setMaterial(portal->getMaterial());
 }
 
