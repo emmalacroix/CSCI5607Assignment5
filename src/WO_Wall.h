@@ -16,6 +16,9 @@ public:
 
 	//VIRTUAL
 	int getType();
+
+	//OTHER
+	bool rotatePortal(Vec3D pos);
 };
 
 #endif

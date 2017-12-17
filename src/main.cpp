@@ -342,6 +342,13 @@ int main(int argc, char *argv[]) {
 			if (sect.getObject()->getType() == WALL_WOBJ)
 			{
 				cout << "Creating portal" << endl;
+				WO_Wall * wallsect = (WO_Wall *)sect.getObject();
+				if (wallsect->rotatePortal(myWorld->getShot()->getWPosition()))
+				{
+					myWorld->getShot()->getPortal()->setRotated(true);
+				} else {
+					myWorld->getShot()->getPortal()->setRotated(false);
+				}
 				myWorld->movePortal(myWorld->getShot()->getPortal(), myWorld->getShot()->getWPosition());
 				myWorld->getShot()->ceaseShot();
 			}

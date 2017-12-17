@@ -5,6 +5,7 @@
 class WO_Portal : public WorldObject
 {
 private:
+	bool rotated;
 	bool exists;
 
 public:
@@ -13,9 +14,11 @@ public:
 	~WO_Portal();
 
 	//SETTERS
+	void setRotated(bool b);
 	void setExists(bool b);
 
 	//GETTERS
+	bool isRotated();
 	bool doesExist();
 
 	//VIRTUAL

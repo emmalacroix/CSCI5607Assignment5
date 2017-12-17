@@ -14,6 +14,7 @@ WO_Portal::WO_Portal()
 	total_vertices = 0;
 	mat = Material();
 	exists = false;
+	rotated = false;
 }
 
 WO_Portal::~WO_Portal()
@@ -28,12 +29,22 @@ void WO_Portal::setExists(bool b)
 	exists = b;
 }
 
+void WO_Portal::setRotated(bool b)
+{
+	rotated = b;
+}
+
 /*----------------------------*/
 // GETTERS
 /*----------------------------*/
 bool WO_Portal::doesExist()
 {
 	return exists;
+}
+
+bool WO_Portal::isRotated()
+{
+	return rotated;
 }
 
 /*----------------------------*/
@@ -55,7 +66,13 @@ void WO_Portal::draw(Camera* cam, GLuint shaderProgram)
 
 	//build model mat specific to this WObj
 	model = glm::translate(model, pos_v);
+	if (rotated)
+	{
+		model = glm::rotate(model, 1.57f, glm::vec3(0, 1, 0));
+	}
+	//model = glm::translate(model, pos_v);
 	model = glm::scale(model, size_v);
+	
 	glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
 	//fragment shader uniforms (from Material)

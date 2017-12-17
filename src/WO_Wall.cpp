@@ -45,3 +45,19 @@ int WO_Wall::getType()
 {
 	return WALL_WOBJ;
 }
+
+/*----------------------------*/
+// OTHERS
+/*----------------------------*/
+bool WO_Wall::rotatePortal(Vec3D pos)
+{
+	Vec3D vec = pos - world_pos;
+	Vec3D reflect = Vec3D(vec.getX(), vec.getY(), -1*vec.getZ());
+	if (dotProduct(vec, reflect) >= 0)
+	//portal in yz plane
+	{
+		return true;
+	} else {
+		return false;
+	}
+}
