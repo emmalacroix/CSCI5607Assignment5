@@ -78,7 +78,8 @@ void WO_Portal::draw(Camera* cam, GLuint shaderProgram)
 
 	//cout << "Rotation angle: " << angle << endl;
 
-	if (angle != 0.0) model = glm::rotate(model, angle, crossp);
+	if (crossp == glm::vec3(0, 0, 0)) crossp = glm::vec3(0, 1, 0);
+	model = glm::rotate(model, angle, crossp);
 
 	model = glm::scale(model, size_v);
 	glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));

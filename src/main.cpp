@@ -765,7 +765,7 @@ void updateForFalling(Character * player, World * myWorld)
 		Vec3D right = player->getRight();
 		Vec3D up = player->getUp();
 
-		Intersection under_sect = myWorld->checkCollision(pos + (-0.5*cell_width*up));
+		Intersection under_sect = myWorld->checkCollision(pos + (-0.1*cell_width*up));
 		WorldObject* under_obj = under_sect.getObject();
 
 		if (under_obj != nullptr)
@@ -827,8 +827,7 @@ bool updatePortalShot(World* myWorld, int time) //returns true if update success
 		return true;
 	}
 	else {
-		cout << "out of bounds : ";
-		temp_pos.print();
+		cout << "out of bounds" << endl;
 		return false;
 	}
 }
