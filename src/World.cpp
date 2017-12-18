@@ -268,7 +268,7 @@ bool World::parseFile(ifstream & input)
 	floor->setMaterial(mat);
 	floor->setSize(Vec3D(width*cell_width, floor_y_thickness, height*cell_width)); //xz plane
 
-	Vec3D pos = Vec3D(width*cell_width*0.5, -0.5*floor_y_thickness, height*cell_width*0.5);
+	Vec3D pos = Vec3D(width*cell_width*0.5, -floor_y_thickness, height*cell_width*0.5);
 
 	floor->setWPosition(pos);
 
@@ -327,12 +327,12 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 					//if the door IS NOT locked
 					if (!door->isLocked())
 					{
-						if (d_pos.getY() < 2 * cell_width)
+						if (d_pos.getY() < 2.5 * cell_width)
 						{
 							//printf("Moving door %c up!\n", door->getID());
 							d_pos.setY(d_pos.getY() + (open_speed));	//move door up if not all the way up
 						}
-						else if (d_pos.getY() >= 2 * cell_width) //all the way up
+						else if (d_pos.getY() >= 2.5 * cell_width) //all the way up
 						{
 							door->lock();
 							d_pos.setY(d_pos.getY() - (open_speed));	//move door down if all the way up
@@ -340,7 +340,7 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 					}
 					else //if the door IS locked
 					{
-						if (d_pos.getY() > 0 && d_pos.getY() <= 2 * cell_width)
+						if (d_pos.getY() > 0.5 && d_pos.getY() <= 2.5 * cell_width)
 						{
 							d_pos.setY(d_pos.getY() - (open_speed));	//move door down if all the way up
 						}

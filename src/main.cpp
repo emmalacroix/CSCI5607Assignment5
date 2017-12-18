@@ -55,7 +55,7 @@ const float mouse_speed = 10;
 
 #ifdef __APPLE__
 const float step_size = 0.006f * cell_width;
-const float acceleration = 0.1f;
+const float acceleration = 0.006f;
 #else
 const float step_size = 0.002f * cell_width;
 const float acceleration = 0.002f;
@@ -762,12 +762,16 @@ void updateForFalling(Character * player, World * myWorld)
 	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
 	if (t >= jump_duration)
 	{
+		Vec3D temp_vel = player->getVelocity();
+
 		Vec3D pos = player->getPos();
 		Vec3D dir = player->getDir();
 		Vec3D right = player->getRight();
 		Vec3D up = player->getUp();
 
-		Intersection under_sect = myWorld->checkCollision(pos + (-0.1*cell_width*up));
+		Vec3D down = Vec3D(0, -1, 0); //direction of "gravity"
+
+		Intersection under_sect = myWorld->checkCollision(pos + 0.5*cell_width*down - 0.1*up);
 		WorldObject* under_obj = under_sect.getObject();
 
 		if (under_obj != nullptr)
@@ -778,17 +782,22 @@ void updateForFalling(Character * player, World * myWorld)
 				Vec3D down = Vec3D(0, -1, 0);
 
 				//if they are parallel, then it was already falling
-				if (!(vel == Vec3D(0, 0, 0)) && (cross(vel, -1 * up) == Vec3D(0, 0, 0)))
+				if (!(temp_vel == Vec3D(0, 0, 0)) && (cross(temp_vel, down) == Vec3D(0, 0, 0)))
 				{
-					player->setVelocity((step_size + acceleration)*down);
+					temp_vel = (step_size + acceleration)*down;
 				}
 				else
 				{
-					player->setVelocity(step_size*down);
+					temp_vel = step_size*down;
 				}
+			} else {
+				temp_vel = Vec3D(temp_vel.getX(), 0, temp_vel.getZ());
 			}
 			//if not Empty, don't change the velocity
+		} else {
+			temp_vel = Vec3D(temp_vel.getX(), 0, temp_vel.getZ());
 		}
+	player->setVelocity(temp_vel);
 	}
 }
 
@@ -797,6 +806,8 @@ void updateForJumping(Character* player, World* myWorld)
 	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
 	if (t < jump_duration) //it has been less than jump_duration ms since jump started
 	{
+		Vec3D temp_vel = player->getVelocity();
+
 		Vec3D pos = player->getPos();
 		Vec3D dir = player->getDir();
 		Vec3D right = player->getRight();
@@ -811,9 +822,14 @@ void updateForJumping(Character* player, World* myWorld)
 			{
 				float x = (float)t / (float)jump_duration;
 				float y = 4 - 8 * x; //derivative of y=-(1/4)*(4x-2)^2+1 (nicely arched jump parabola)
-				player->setVelocity(Vec3D(fabs(y)*jump_height*step_size*up.getX(), y*jump_height*step_size*up.getY(), fabs(y)*jump_height*step_size*up.getZ()));
+				temp_vel = Vec3D(temp_vel.getX(), y*jump_height*step_size*up.getY(), temp_vel.getZ());
+			} else {
+				player->setJumpStart(-jump_duration);
 			}
+		} else {
+			player->setJumpStart(-jump_duration);
 		}
+		player->setVelocity(temp_vel);
 	}
 }
 
