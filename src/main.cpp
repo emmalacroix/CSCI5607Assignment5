@@ -44,6 +44,7 @@ using namespace std;
 bool fullscreen = false;
 int screen_width = 800;
 int screen_height = 600;
+float fov = 3.14f / 4;
 
 //used for "speed" of character/camera
 const float cell_width = 1.0;
@@ -221,20 +222,20 @@ int main(int argc, char *argv[]) {
 	glGenVertexArrays(1, &vao); //Create a VAO
 	glBindVertexArray(vao); //Bind the above created VAO to the current context
 
-							/////////////////////////////////
-							//BUILD VERTEX BUFFER OBJECT
-							/////////////////////////////////
-							//Allocate memory on the graphics card to store geometry (vertex buffer object)
+	/////////////////////////////////
+	//BUILD VERTEX BUFFER OBJECT
+	/////////////////////////////////
+	//Allocate memory on the graphics card to store geometry (vertex buffer object)
 	GLuint vbo[1];
 	glGenBuffers(1, vbo);  //Create 1 buffer called vbo
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]); //Set the vbo as the active array buffer (Only one buffer can be active at a time)
 	glBufferData(GL_ARRAY_BUFFER, total_verts * 8 * sizeof(float), modelData, GL_STATIC_DRAW); //upload vertices to vbo
-																							   //GL_STATIC_DRAW means we won't change the geometry, GL_DYNAMIC_DRAW = geometry changes infrequently
-																							   //GL_STREAM_DRAW = geom. changes frequently.  This effects which types of GPU memory is used
+	//GL_STATIC_DRAW means we won't change the geometry, GL_DYNAMIC_DRAW = geometry changes infrequently
+	//GL_STREAM_DRAW = geom. changes frequently.  This effects which types of GPU memory is used
 
-																							   /////////////////////////////////
-																							   //SETUP SHADERS
-																							   /////////////////////////////////
+	/////////////////////////////////
+	//SETUP SHADERS
+	/////////////////////////////////
 	GLuint shaderProgram = util::LoadShader("Shaders/phongTex.vert", "Shaders/phongTex.frag");
 
 	//load in textures
@@ -401,7 +402,8 @@ int main(int argc, char *argv[]) {
 
 		glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
 
-		glm::mat4 proj = glm::perspective(3.14f / 4, 800.0f / 600.0f, 0.01f, 1000.0f); //FOV, aspect, near, far
+		fullscreen ? fov = 3.14f / 2 : fov = 3.14f / 4;
+		glm::mat4 proj = glm::perspective(fov, 800.0f / 600.0f, 0.01f, 1000.0f); //FOV, aspect, near, far
 		glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
 
 		glActiveTexture(GL_TEXTURE0);
