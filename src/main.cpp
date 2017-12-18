@@ -354,13 +354,16 @@ int main(int argc, char *argv[]) {
 					if (wall->getIntersection(front_pos, myWorld->getShot()->getDir(), sect))
 					{
 						sect.setObject(wall);
-						cout << "Placing portal at : ";
+						cout << "\nPlacing portal at : ";
 						Vec3D ppos = sect.getPoint() + 0.02*cell_width*sect.getNormal();
 						ppos.print();
 						cout << "Portal normal : ";
 						sect.getNormal().print();
+						cout << "Portal up : ";
+						sect.getUp().print();
 						myWorld->getShot()->getPortal()->setWPosition(ppos);
 						myWorld->getShot()->getPortal()->setNorm(sect.getNormal());
+						myWorld->getShot()->getPortal()->setUp(sect.getUp());
 						myWorld->movePortal(myWorld->getShot()->getPortal(), ppos);
 						myWorld->getShot()->ceaseShot();
 					}

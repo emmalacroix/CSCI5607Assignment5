@@ -10,6 +10,7 @@ private:
 	WorldObject* int_obj;
 	Vec3D int_pt;
 	Vec3D normal;
+	Vec3D up;
 
 public:
 	//CONSTRUCTORS AND DESTRUCTORS
@@ -20,11 +21,13 @@ public:
 	void setObject(WorldObject* wo);
 	void setPoint(Vec3D p);
 	void setNormal(Vec3D n);
+	void setUp(Vec3D u);
 
 	//GETTERS
 	WorldObject* getObject();
 	Vec3D getPoint();
 	Vec3D getNormal();
+	Vec3D getUp();
 
 };
 

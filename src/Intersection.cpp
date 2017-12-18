@@ -34,6 +34,11 @@ void Intersection::setNormal(Vec3D n)
 	normal = n;
 }
 
+void Intersection::setUp(Vec3D u)
+{
+	up = u;
+}
+
 /*----------------------------*/
 // GETTERS
 /*----------------------------*/
@@ -50,4 +55,9 @@ Vec3D Intersection::getPoint()
 Vec3D Intersection::getNormal()
 {
 	return normal;
+}
+
+Vec3D Intersection::getUp()
+{
+	return up;
 }
