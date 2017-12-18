@@ -397,7 +397,65 @@ Intersection World::checkCollision(Vec3D pos)
 		pos.getY() < num_levels*cell_width
 		)
 	{
+		//first check and see if collision with portal
+		if (portal1->doesExist())
+		{
+			iSect = checkPortalCollision(portal1, pos);
+			if (iSect.getObject() != nullptr) return iSect;
+		}
+		if (portal2->doesExist())
+		{
+			iSect = checkPortalCollision(portal2, pos);
+			if (iSect.getObject() != nullptr) return iSect;
+		}
+
 		iSect.setObject(getWO(pos));
+	}
+	return iSect;
+}
+
+Intersection World::checkPortalCollision(WO_Portal* portal, Vec3D pos)
+{
+	Intersection iSect;
+
+	if (portal->getNorm().getZ())
+	{
+		if (pos.getX() >= portal->getWPosition().getX()-.02 &&
+			pos.getX() < portal->getWPosition().getX()+.02 &&
+			pos.getY() >= portal->getWPosition().getY()-.33 &&
+			pos.getY() < portal->getWPosition().getY()+.33 &&
+			pos.getZ() >= portal->getWPosition().getZ()-.17 &&
+			pos.getZ() < portal->getWPosition().getZ()+.17 
+			)
+		{
+			iSect.setObject(portal);
+		}
+	}
+	else if (portal->getNorm().getX())
+	{
+		if (pos.getX() >= portal->getWPosition().getX()-.17 &&
+			pos.getX() < portal->getWPosition().getX()+.17 &&
+			pos.getY() >= portal->getWPosition().getY()-.33 &&
+			pos.getY() < portal->getWPosition().getY()+.33 &&
+			pos.getZ() >= portal->getWPosition().getZ()-.02 &&
+			pos.getZ() < portal->getWPosition().getZ()+.02 
+			)
+		{
+			iSect.setObject(portal);
+		}
+	}
+	else if (portal->getNorm().getY())
+	{
+		if (pos.getX() >= portal->getWPosition().getX()-.17 &&
+			pos.getX() < portal->getWPosition().getX()+.17 &&
+			pos.getY() >= portal->getWPosition().getY()-.02 &&
+			pos.getY() < portal->getWPosition().getY()+.02 &&
+			pos.getZ() >= portal->getWPosition().getZ()-.33 &&
+			pos.getZ() < portal->getWPosition().getZ()+.33 
+			)
+		{
+			iSect.setObject(portal);
+		}
 	}
 	return iSect;
 }

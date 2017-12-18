@@ -61,6 +61,11 @@ void Character::setJumpStart(int s)
 	jump_start = s;
 }
 
+void Character::setTraveling(bool b)
+{
+	portal_traveling = b;
+}
+
 /*----------------------------*/
 // GETTERS
 /*----------------------------*/
@@ -119,6 +124,11 @@ int Character::getJumpStart()
 	return jump_start;
 }
 
+bool Character::isTraveling()
+{
+	return portal_traveling;
+}
+
 /*----------------------------*/
 // OTHERS
 /*----------------------------*/
@@ -166,4 +176,14 @@ bool Character::hasKey(char c)
 		}
 	}
 	return false;
+}
+
+void Character::enterPortal()
+{
+	portal_traveling = true;
+}
+
+void Character::exitPortal()
+{
+	portal_traveling = false;
 }

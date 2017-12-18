@@ -45,20 +45,23 @@ bool fullscreen = false;
 int screen_width = 800;
 int screen_height = 600;
 float fov = 3.14f / 4;
+//float horizontal_angle = 0; //keep track of angle the mouse has changed
+//float vertical_angle = 0;   //the player view through!
 
 //used for "speed" of character/camera
 const float cell_width = 1.0;
 
 const int jump_duration = 1000; //in milliseconds
-const float jump_height = 1.0;
 const float mouse_speed = 10;
 
 #ifdef __APPLE__
 const float step_size = 0.006f * cell_width;
 const float acceleration = 0.006f;
+const float jump_height = 2.0;
 #else
 const float step_size = 0.002f * cell_width;
 const float acceleration = 0.002f;
+const float jump_height = 1.0;
 #endif
 
 //shader globals
@@ -198,21 +201,14 @@ int main(int argc, char *argv[]) {
 	player->setUp(Vec3D(0, 1, 0));					//map is in xz plane
 	player->setRight(Vec3D(0, 0, 1));				//look along +x
 	player->setJumpStart(-jump_duration);			//not jumping at start of program
-	//player->setTraveling(false);					//not traveling through a portal at start
+	player->setTraveling(false);					//not traveling through a portal at start
 
-													////////////////////////////////////////////////////
-													//MOUSE : keep track of angle the mouse has changed
-													//			player view through!
-													////////////////////////////////////////////////////
+	////////////////////////////////////////////////////
+	//MOUSE : keep track of angle the mouse has changed
+	//			player view through!
+	////////////////////////////////////////////////////
 	float horizontal_angle = 0;
 	float vertical_angle = 0;
-
-	/////////////////////////////////
-	//PORTALS
-	/////////////////////////////////
-	//testing testing
-	//myWorld->movePortal(myWorld->getPortal1(), start_pos);
-	//myWorld->movePortal(myWorld->getPortal2(), start_pos+Vec3D(1,0,0));
 
 	/////////////////////////////////
 	//BUILD VERTEX ARRAY OBJECT
@@ -269,7 +265,6 @@ int main(int argc, char *argv[]) {
 	glEnableVertexAttribArray(normAttrib);
 
 	GLint texAttrib = glGetAttribLocation(shaderProgram, "inTexcoord");
-	//glEnableVertexAttribArray(texAttrib);
 	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(texAttrib);
 
@@ -335,10 +330,10 @@ int main(int argc, char *argv[]) {
 			SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0); //Set to full screen
 		}//END polling while
 
-		 // if (recenterMouse)
-		 // {
-		 // 	SDL_WarpMouseInWindow(window, screen_width/2, screen_height/2);
-		 // }
+		// if (recenterMouse)
+		// {
+		// 	SDL_WarpMouseInWindow(window, screen_width/2, screen_height/2);
+		// }
 
 		if (myWorld->getShot()->shooting())
 		{
@@ -704,33 +699,41 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 			break;
 		case PORTAL_WOBJ:
 			cout << "Collided with a portal" << endl;
-			/*if (!player->isTraveling()) //we are just now entering a portal
+			if (!player->isTraveling()) //we are just now entering a portal
 			{
 				player->enterPortal();
 				WO_Portal * portal = (WO_Portal *)collided_obj;
+				WO_Portal * partner_portal;
 				if (portal == myWorld->getPortal1())
 				{
-					if (myWorld->getPortal2()->doesExist())
-					{
-						temp_pos = myWorld->getPortal2()->getWPosition();
-						player->setDir(myWorld->getPortal2()->getDir());
-					}
+					partner_portal = myWorld->getPortal2();
+				} else {
+					partner_portal = myWorld->getPortal1();
 				}
-				else {
-					if (myWorld->getPortal1()->doesExist())
-					{
-						temp_pos = myWorld->getPortal1()->getWPosition();
-						player->setDir(myWorld->getPortal1()->getDir());
-					}
+				if (partner_portal->doesExist())
+				{
+					//cout << "h_angle is " << horizontal_angle << endl;
+					//cout << "v_angle is " << vertical_angle << endl;
+					temp_pos = partner_portal->getWPosition();
+					//Vec3D norm = portal->getNorm();
+					Vec3D partner_norm = partner_portal->getNorm();
+					player->setDir(partner_norm);
+					player->setRight(cross(player->getDir(), player->getUp()));
+					//float h_angle = acos(dotProduct(Vec3D(norm.getX(), 0, norm.getZ()), Vec3D(partner_norm.getX(), 0, partner_norm.getZ())));
+					//float v_angle = acos(dotProduct(Vec3D(0, norm.getY(), 0), Vec3D(0, partner_norm.getY(), 0)));
+					//if (h_angle != 0.0) horizontal_angle += h_angle;
+					//if (v_angle != 0.0) vertical_angle += v_angle;
+					//cout << "h_angle is " << horizontal_angle << endl;
+					//cout << "v_angle is " << vertical_angle << endl;
 				}
-			}*/
+			}
 			break;
 		default:
 			//collided with start -- do nothing
-			/*if (player->isTraveling()) //we were previously traveling through a portal
+			if (player->isTraveling()) //we were previously traveling through a portal
 			{
 				player->exitPortal(); //no longer traveling through portal
-			}*/
+			}
 			break;
 		}//END collision switch
 	}
