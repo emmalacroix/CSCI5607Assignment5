@@ -367,8 +367,8 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
-		updateForFalling(player, myWorld);
 		updateForJumping(player, myWorld);
+		updateForFalling(player, myWorld);
 		complete = updateCharacter(player, myWorld);
 
 		//after we figure out moving the Character - set the Camera params
@@ -763,43 +763,45 @@ bool updateCharacter(Character * player, World * myWorld)
 void updateForFalling(Character * player, World * myWorld)
 {
 	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
-	Vec3D temp_vel = player->getVelocity();
-
-	Vec3D pos = player->getPos();
-	Vec3D dir = player->getDir();
-	Vec3D right = player->getRight();
-	Vec3D up = player->getUp();
-
-	Vec3D down = Vec3D(0, -1, 0); //direction of "gravity"
-
-	Intersection under_sect = myWorld->checkCollision(pos + 0.5*cell_width*down - 0.1*up);
-	WorldObject* under_obj = under_sect.getObject();
-
-	if (under_obj != nullptr)
+	if (t >= jump_duration/2)
 	{
-		if (!(under_obj->getType() == WALL_WOBJ) && !(under_obj->getType() == DOOR_WOBJ) && !(under_obj->getType() == PORTAL_WOBJ))
-		{
-			Vec3D vel = player->getVelocity();
-			Vec3D down = Vec3D(0, -1, 0);
+		Vec3D temp_vel = player->getVelocity();
 
-			//if they are parallel, then it was already falling
-			if (!(temp_vel == Vec3D(0, 0, 0)) && (cross(temp_vel, down) == Vec3D(0, 0, 0)))
+		Vec3D pos = player->getPos();
+		Vec3D dir = player->getDir();
+		Vec3D right = player->getRight();
+		Vec3D up = player->getUp();
+
+		Vec3D down = Vec3D(0, -1, 0); //direction of "gravity"
+
+		Intersection under_sect = myWorld->checkCollision(pos + 0.5*cell_width*down - 0.1*up);
+		WorldObject* under_obj = under_sect.getObject();
+
+		if (under_obj != nullptr)
+		{
+			if (!(under_obj->getType() == WALL_WOBJ) && !(under_obj->getType() == DOOR_WOBJ) && !(under_obj->getType() == PORTAL_WOBJ))
 			{
-				temp_vel = (step_size + acceleration)*down;
+				Vec3D vel = player->getVelocity();
+				Vec3D down = Vec3D(0, -1, 0);
+
+				//if they are parallel, then it was already falling
+				if (!(temp_vel == Vec3D(0, 0, 0)) && (cross(temp_vel, down) == Vec3D(0, 0, 0)))
+				{
+					temp_vel = (step_size + acceleration)*down;
+				}
+				else
+				{
+					temp_vel = step_size*down;
+				}
+			} else {
+				temp_vel = Vec3D(temp_vel.getX(), 0, temp_vel.getZ());
 			}
-			else
-			{
-				temp_vel = step_size*down;
-			}
+			//if not Empty, don't change the velocity
 		} else {
 			temp_vel = Vec3D(temp_vel.getX(), 0, temp_vel.getZ());
 		}
-		//if not Empty, don't change the velocity
-	} else {
-		temp_vel = Vec3D(temp_vel.getX(), 0, temp_vel.getZ());
+		player->setVelocity(temp_vel);
 	}
-	player->setVelocity(temp_vel);
-
 }
 
 void updateForJumping(Character* player, World* myWorld)
