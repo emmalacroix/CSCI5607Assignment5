@@ -327,12 +327,12 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 					//if the door IS NOT locked
 					if (!door->isLocked())
 					{
-						if (d_pos.getY() < 2.5 * cell_width)
+						if (d_pos.getY() < (lev + 2.5) * cell_width)
 						{
 							//printf("Moving door %c up!\n", door->getID());
 							d_pos.setY(d_pos.getY() + (open_speed));	//move door up if not all the way up
 						}
-						else if (d_pos.getY() >= 2.5 * cell_width) //all the way up
+						else if (d_pos.getY() >= (lev + 2.5) * cell_width) //all the way up
 						{
 							door->lock();
 							d_pos.setY(d_pos.getY() - (open_speed));	//move door down if all the way up
@@ -340,7 +340,7 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 					}
 					else //if the door IS locked
 					{
-						if (d_pos.getY() > 0.5 && d_pos.getY() <= 2.5 * cell_width)
+						if (d_pos.getY() > lev + 0.5 && d_pos.getY() <= (lev + 2.5) * cell_width)
 						{
 							d_pos.setY(d_pos.getY() - (open_speed));	//move door down if all the way up
 						}
