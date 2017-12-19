@@ -32,6 +32,13 @@ void WO_Portal::setExists(bool b)
 void WO_Portal::setNorm(Vec3D n)
 {
 	normal = n;
+	calcModel();
+}
+
+void WO_Portal::setUp(Vec3D u)
+{
+	up = u;
+	calcModel();
 }
 
 /*----------------------------*/
@@ -45,6 +52,16 @@ bool WO_Portal::doesExist()
 Vec3D WO_Portal::getNorm()
 {
 	return normal;
+}
+
+Vec3D WO_Portal::getUp()
+{
+	return up;
+}
+
+glm::mat4 WO_Portal::getModelMat()
+{
+	return model;
 }
 
 /*----------------------------*/
@@ -115,40 +132,29 @@ void WO_Portal::moveTo(Vec3D pos)
 	exists = true;
 }
 
-bool WO_Portal::getIntersection(Vec3D origin, Vec3D dir, Intersection& iSect)
+void WO_Portal::calcModel()
 {
-	if (findPlaneIntersection(origin, dir, normal, world_pos, iSect))
-	{
-		//check to see if intersection pt is within portal bounds
-		Vec3D inter_pt = iSect.getPoint();
+	model = glm::mat4();
 
+	glm::vec3 size_v = util::vec3DtoGLM(size);
+	glm::vec3 pos_v = util::vec3DtoGLM(world_pos);
 
+	//build model mat specific to this WObj
+	model = glm::translate(model, pos_v);
 
-	}
+	//rotate assuming that it's originally facing +z
+	glm::vec3 crossp = util::vec3DtoGLM(cross(normal, Vec3D(0, 0, 1)));
+	glm::normalize(crossp);
 
-	return false;
-}
+	//cout << "Rotation axis: ";
+	//cross(normal, Vec3D(0, 0, 1)).print();
 
-bool WO_Portal::findPlaneIntersection(Vec3D origin, Vec3D dir, Vec3D face_norm, Vec3D face_pt, Intersection & iSect)
-{
-	//algorithm below is a modification of the one described by:
-	//https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-plane-and-ray-disk-intersection
+	float angle = acos(dotProduct(Vec3D(0, 0, 1), normal));
 
-	float denom = dotProduct(dir, face_norm);
+	//cout << "Rotation angle: " << angle << endl;
 
-	if (denom > kEpsilon) //save time; don't worry about really small numbers
-	{
-		Vec3D dist = face_pt - origin;
-		float t = dotProduct(dist, face_norm) / denom;
+	if (crossp == glm::vec3(0, 0, 0)) crossp = glm::vec3(0, 1, 0);
+	model = glm::rotate(model, angle, crossp);
 
-		bool result = (t >= 0);
-
-		if (result)
-		{
-			//store intersection point (need this for Triangle)
-			iSect.setPoint(origin + t*dir);
-			return true;
-		}
-	}
-	return false;
+	model = glm::scale(model, size_v);
 }
