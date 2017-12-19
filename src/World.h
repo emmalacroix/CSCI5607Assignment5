@@ -65,6 +65,7 @@ private:
 	WorldObject* buildKey(Coord2D c, int level, int i);
 	WorldObject* buildDoor(Coord2D c, int level, int i);
 	glm::vec3 getLetterColor(int i);
+	void drawNonPortals(Camera * cam, GLuint shaderProgram, GLuint uniTexID);
 
 public:
 	//CONSTRUCTORS AND DESTRUCTORS

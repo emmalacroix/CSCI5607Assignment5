@@ -61,6 +61,11 @@ void Character::setJumpStart(int s)
 	jump_start = s;
 }
 
+void Character::setYHeight(float y)
+{
+	y_height = y;
+}
+
 /*----------------------------*/
 // GETTERS
 /*----------------------------*/
@@ -117,6 +122,11 @@ Vec3D Character::getVelocity()
 int Character::getJumpStart()
 {
 	return jump_start;
+}
+
+float Character::getYHeight()
+{
+	return y_height;
 }
 
 /*----------------------------*/
