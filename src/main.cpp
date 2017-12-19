@@ -61,7 +61,7 @@ const float jump_height = 2.0;
 #else
 const float step_size = 0.002f * cell_width;
 const float acceleration = 0.002f;
-const float jump_height = 1.0;
+const float jump_height = 0.7*cell_width;
 #endif
 
 //shader globals

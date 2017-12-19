@@ -1,0 +1,20 @@
+# Dimensions (Level width, Level height, number of levels)
+5,5,3
+# bottom level
+W,0,0,0,0
+W,0,0,0,0
+W,0,0,0,0
+W,0,0,0,0
+W,0,0,0,S
+# middle level
+W,0,0,0,0
+W,0,0,0,0
+W,0,0,0,0
+W,0,0,0,0
+W,0,0,0,0
+# top level
+W,W,W,0,0
+W,W,W,0,0
+W,W,W,0,0
+W,W,W,0,0
+W,W,W,0,0
