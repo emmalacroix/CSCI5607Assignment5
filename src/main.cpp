@@ -207,7 +207,7 @@ int main(int argc, char *argv[]) {
 	//MOUSE : keep track of angle the mouse has changed
 	//			player view through!
 	////////////////////////////////////////////////////
-	float horizontal_angle = 0;
+	float horizontal_angle = 1.57f;
 	float vertical_angle = 0;
 
 	/////////////////////////////////
@@ -384,9 +384,9 @@ int main(int argc, char *argv[]) {
 
 		glUseProgram(shaderProgram); //Set the active shader (only one can be used at a time)
 
-									 //vertex shader uniforms
-		GLint uniView = glGetUniformLocation(shaderProgram, "view");
-		GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
+		//vertex shader uniforms
+		//GLint uniView = glGetUniformLocation(shaderProgram, "view");
+		//GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
 		GLint uniTexID = glGetUniformLocation(shaderProgram, "texID");
 
 		//build view matrix from Camera
@@ -395,11 +395,11 @@ int main(int argc, char *argv[]) {
 			util::vec3DtoGLM(cam->getPos() + cam->getDir()),  //Look at point
 			util::vec3DtoGLM(cam->getUp()));
 
-		glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
+		//glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
 
 		fullscreen ? fov = 3.14f / 2 : fov = 3.14f / 4;
 		glm::mat4 proj = glm::perspective(fov, 800.0f / 600.0f, 0.01f, 200.0f); //FOV, aspect, near, far
-		glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
+		//glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, tex0);
@@ -416,7 +416,8 @@ int main(int argc, char *argv[]) {
 		glBindVertexArray(vao);
 
 		//draw all WObjs
-		myWorld->draw(cam, shaderProgram, uniTexID);
+		//Camera * cam, GLuint shaderProgram, GLuint uniTexID, glm::mat4 const &viewMat, glm::mat4 const &projMat, int maxRecLevel, int cur_recLevel
+		myWorld->draw(cam, shaderProgram, uniTexID, view, proj, 1, 1);
 		player->draw(cam, shaderProgram, myWorld, uniTexID);
 
 		SDL_GL_SwapWindow(window);
@@ -443,11 +444,12 @@ int main(int argc, char *argv[]) {
 SDL_Window* initSDL(SDL_GLContext& context)
 {
 	SDL_Init(SDL_INIT_VIDEO);  //Initialize Graphics (for OpenGL)
-
-							   //Ask SDL to get a recent version of OpenGL (3.2 or greater)
+	
+	//Ask SDL to get a recent version of OpenGL (3.2 or greater)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 1); //ask SDL to give us a stencil buffer
 
 	//Create a window (offsetx, offsety, width, height, flags)
 	SDL_Window* window = SDL_CreateWindow("My OpenGL Program", 100, 100, screen_width, screen_height, SDL_WINDOW_OPENGL);
@@ -565,35 +567,9 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		//printf("Left arrow pressed - step to the left\n");
 		player->setVelocity(Vec3D(-1 * step_size*right.getX(), 0, -1 * step_size*right.getZ()));
 		break;
-		////////////////////////////////
-		//TURNING WITH A/D KEYS		  //
-		////////////////////////////////
-		/*case SDLK_d:
-		//printf("D key pressed - turn to the right\n");
-		temp_dir = dir + (50*step_size*right);
-		temp_right = cross(temp_dir, up); //calc new right using new dir
-		break;
-		case SDLK_a:
-		//printf("A key pressed - turn to the left\n");
-		temp_dir = dir - (50*step_size*right);
-		temp_right = cross(temp_dir, up); //calc new right using new dir
-		break;*/
-		////////////////////////////////
-		//TILTING WITH W/S KEYS		  //
-		////////////////////////////////
-		/*case SDLK_w:
-		//printf("W key pressed - tilt up\n");
-		temp_dir = dir + (50*step_size*up);
-		temp_up = cross(right, temp_dir); //calc new up using new dir
-		break;
-		case SDLK_s:
-		//printf("S key pressed - tilt down\n");
-		temp_dir = dir - (50*step_size*up);
-		temp_up = cross(right, temp_dir); //calc new up using new dir
-		break;*/
-		////////////////////////////////
-		//JUMP WITH SPACEBAR		  //
-		////////////////////////////////
+	////////////////////////////////
+	//JUMP WITH SPACEBAR		  //
+	////////////////////////////////
 	case SDLK_SPACE:
 	{
 		int time = SDL_GetTicks();

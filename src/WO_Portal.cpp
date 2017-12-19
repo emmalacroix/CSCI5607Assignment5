@@ -73,7 +73,7 @@ int WO_Portal::getType()
 }
 
 //assumes that the models have already been loaded into the VBO before this call
-void WO_Portal::draw(Camera* cam, GLuint shaderProgram)
+void WO_Portal::draw(Camera* cam, GLuint shaderProgram, glm::mat4 const &viewMat, glm::mat4 const &projMat)
 {
 	GLint uniModel = glGetUniformLocation(shaderProgram, "model");
 
@@ -157,4 +157,35 @@ void WO_Portal::calcModel()
 	model = glm::rotate(model, angle, crossp);
 
 	model = glm::scale(model, size_v);
+}
+
+// Lengyel, Eric. "Oblique View Frustum Depth Projection and Clipping".
+// Journal of Game Development, Vol. 1, No. 2 (2005)
+// http://www.terathon.com/code/oblique.html
+
+glm::mat4 const WO_Portal::clippedProjMat(glm::mat4 const &viewMat, glm::mat4 const &projMat) const
+{
+	/*float dist = glm::length(util::vec3DtoGLM(world_pos));
+	glm::vec4 clipPlane(d_orientation * glm::vec3(0.0f, 0.0f, -1.0f), dist);
+	clipPlane = glm::inverse(glm::transpose(viewMat)) * clipPlane;
+
+	if (clipPlane.w > 0.0f)
+		return projMat;
+
+	glm::vec4 q = glm::inverse(projMat) * glm::vec4(
+		glm::sign(clipPlane.x),
+		glm::sign(clipPlane.y),
+		1.0f,
+		1.0f
+	);
+
+	glm::vec4 c = clipPlane * (2.0f / (glm::dot(clipPlane, q)));
+
+	glm::mat4 newProj = projMat;
+	// third row = clip plane - fourth row
+	newProj = glm::row(newProj, 2, c - glm::row(newProj, 3));
+
+	return newProj;*/
+
+	return projMat;
 }

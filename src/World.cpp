@@ -311,19 +311,71 @@ bool World::parseFile(ifstream & input)
 
 //loops through WObj array and draws each
 //also draws floor and portals
-void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
+void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID, glm::mat4 const &viewMat, glm::mat4 const &projMat, int maxRecLevel, int cur_recLevel)
 {
-	if (portal1->doesExist())
+	//portal rendering algorithm is inspired or copied from:
+	//https://th0mas.nl/2013/05/19/rendering-recursive-portals-with-opengl/
+
+	if (portal1->doesExist() && portal2->doesExist())
 	{
-		portal1->draw(cam, shaderProgram);
+		//figure out stencil buffers for portals and draw insides of each portal
+		drawSinglePortal(portal1, cam, shaderProgram, uniTexID, viewMat, projMat, portal2->getModelMat(), maxRecLevel, cur_recLevel);
+		drawSinglePortal(portal2, cam, shaderProgram, uniTexID, viewMat, projMat, portal1->getModelMat(), maxRecLevel, cur_recLevel);
+
+		// Disable the stencil test and stencil writing
+		glDisable(GL_STENCIL_TEST);
+		glStencilMask(0x00);
+
+		// Disable color writing
+		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+		// Enable the depth test, and depth writing.
+		glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_TRUE);
+
+		// Make sure we always write the data into the buffer
+		glDepthFunc(GL_ALWAYS);
+
+		// Clear the depth buffer
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		// Draw portals into depth buffer
+		portal1->draw(cam, shaderProgram, viewMat, projMat);
+		portal2->draw(cam, shaderProgram, viewMat, projMat);
+
+		// Reset the depth function to the default
+		glDepthFunc(GL_LESS);
+
+		// Enable stencil test and disable writing to stencil buffer
+		glEnable(GL_STENCIL_TEST);
+		glStencilMask(0x00);
+
+		// Draw at stencil >= recursionlevel
+		// which is at the current level or higher (more to the inside)
+		// This basically prevents drawing on the outside of this level.
+		glStencilFunc(GL_LEQUAL, cur_recLevel, 0xFF);
+
+		// Enable color and depth drawing again
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glDepthMask(GL_TRUE);
+
+		// And enable the depth test
+		glEnable(GL_DEPTH_TEST);
 	}
-	if (portal2->doesExist())
+	else
 	{
-		portal2->draw(cam, shaderProgram);
+		if (portal1->doesExist())
+		{
+			portal1->draw(cam, shaderProgram, viewMat, projMat);
+		}
+		if (portal2->doesExist())
+		{
+			portal2->draw(cam, shaderProgram, viewMat, projMat);
+		}
 	}
 
 	//after rendering portals, can draw rest of scene normally
-	drawNonPortals(cam, shaderProgram, uniTexID);
+	drawNonPortals(cam, shaderProgram, uniTexID, viewMat, projMat);
 }
 
 //check if given pos vector collides with and WObjs in map
@@ -561,8 +613,14 @@ glm::vec3 World::getLetterColor(int i)
 	}
 }
 
-void World::drawNonPortals(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
+void World::drawNonPortals(Camera * cam, GLuint shaderProgram, GLuint uniTexID, glm::mat4 const& view, glm::mat4 const& proj)
 {
+	GLint uniView = glGetUniformLocation(shaderProgram, "view");
+	GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
+
+	glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
+
 	for (int lev = 0; lev < num_levels; lev++)
 	{
 		for (int i = 0; i < width*height; i++)
@@ -622,4 +680,97 @@ void World::drawNonPortals(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 	{
 		shot->draw(cam, shaderProgram);
 	}
+}
+
+void World::drawSinglePortal(WO_Portal* portal, Camera * cam, GLuint shaderProgram, GLuint uniTexID,
+	glm::mat4 const &viewMat, glm::mat4 const &projMat, glm::mat4 const &destModel, int maxRecLevel, int cur_recLevel)
+{
+	// Disable color and depth drawing
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	glDepthMask(GL_FALSE);
+
+	// Disable depth test
+	glDisable(GL_DEPTH_TEST);
+
+	// Enable stencil test, to prevent drawing outside
+	// region of current portal depth
+	glEnable(GL_STENCIL_TEST);
+
+	// Fail stencil test when inside of outer portal
+	// (fail where we should be drawing the inner portal)
+	glStencilFunc(GL_NOTEQUAL, cur_recLevel, 0xFF);
+
+	// Increment stencil value on stencil fail
+	// (on area of inner portal)
+	glStencilOp(GL_INCR, GL_KEEP, GL_KEEP);
+
+	// Enable (writing into) all stencil bits
+	glStencilMask(0xFF);
+
+	// Draw portal into stencil buffer
+	portal->draw(cam, shaderProgram, viewMat, projMat);
+
+	// Calculate view matrix as if the player was already teleported
+	glm::mat4 destView = viewMat * portal->getModelMat()
+		* glm::rotate(glm::mat4(1.0f), 180.0f, util::vec3DtoGLM(portal->getUp()))
+		* glm::inverse(destModel);
+
+	// Base case, render inside of inner portal
+	if (cur_recLevel == maxRecLevel)
+	{
+		// Enable color and depth drawing
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glDepthMask(GL_TRUE);
+
+		// Clear the depth buffer so we don't interfere with stuff
+		// outside of this inner portal
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		// Enable the depth test
+		// So the stuff we render here is rendered correctly
+		glEnable(GL_DEPTH_TEST);
+
+		// Enable stencil test
+		// So we can limit drawing inside of the inner portal
+		glEnable(GL_STENCIL_TEST);
+
+		// Disable drawing into stencil buffer
+		glStencilMask(0x00);
+
+		// Draw only where stencil value == recursionLevel + 1
+		// which is where we just drew the new portal
+		glStencilFunc(GL_EQUAL, cur_recLevel + 1, 0xFF);
+
+		// Draw scene objects with destView, limited to stencil buffer
+		// use an edited projection matrix to set the near plane to the portal plane
+		drawNonPortals(cam, shaderProgram, uniTexID, destView, portal->clippedProjMat(destView, projMat));
+		//drawNonPortals(destView, projMat);
+	}
+	else
+	{
+		// Recursion case
+		// Pass our new view matrix and the clipped projection matrix (see above)
+		draw(cam, shaderProgram, uniTexID, destView, portal->clippedProjMat(destView, projMat), maxRecLevel, cur_recLevel + 1);
+	}
+
+	// Disable color and depth drawing
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	glDepthMask(GL_FALSE);
+
+	// Enable stencil test and stencil drawing
+	glEnable(GL_STENCIL_TEST);
+	glStencilMask(0xFF);
+
+	// Fail stencil test when inside of our newly rendered
+	// inner portal
+	glStencilFunc(GL_NOTEQUAL, cur_recLevel + 1, 0xFF);
+
+	// Decrement stencil value on stencil fail
+	// This resets the incremented values to what they were before,
+	// eventually ending up with a stencil buffer full of zero's again
+	// after the last (outer) step.
+	glStencilOp(GL_DECR, GL_KEEP, GL_KEEP);
+
+	// Draw portal into stencil buffer
+	portal->draw(cam, shaderProgram, viewMat, projMat);
 }

@@ -31,10 +31,11 @@ public:
 
 	//VIRTUAL
 	int getType();
-	void draw(Camera* cam, GLuint shaderProgram);
+	void draw(Camera* cam, GLuint shaderProgram, glm::mat4 const &viewMat, glm::mat4 const &projMat);
 
 	//OTHERS
 	void moveTo(Vec3D pos);
 	void calcModel();
+	glm::mat4 const clippedProjMat(glm::mat4 const &viewMat, glm::mat4 const &projMat) const;
 };
 #endif
