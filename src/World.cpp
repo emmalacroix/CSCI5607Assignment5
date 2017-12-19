@@ -311,8 +311,113 @@ bool World::parseFile(ifstream & input)
 
 //loops through WObj array and draws each
 //also draws floor and portals
-void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
+
+void World::drawOnlyWorld(Camera * cam, GLuint shaderProgram, GLuint uniTexID, int showPortals)
 {
+
+	if(!showPortals){
+		glEnable(GL_STENCIL_TEST);
+		glClearStencil(0);
+		glStencilMask(~0);
+		glStencilFunc(GL_ALWAYS, 0, 0xFF);
+		glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+		glClear(GL_STENCIL_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
+
+
+	if(!showPortals)
+	{
+
+		if (portal1->doesExist())
+		{
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+			glStencilMask(0xFF);
+
+			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+			glDisable(GL_DEPTH_TEST);
+
+			portal1->draw(cam, shaderProgram);
+		}
+
+		if (portal2->doesExist())
+		{
+			glStencilFunc(GL_ALWAYS, 2, 0xFF);
+			glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+			glStencilMask(0xFF);
+
+			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+			glDisable(GL_DEPTH_TEST);
+			portal2->draw(cam, shaderProgram);
+		}
+
+	}
+
+
+
+
+
+	if( !showPortals){
+		glStencilFunc(GL_EQUAL, 0, 0xFF);
+		glStencilMask(0x00);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		//		glDepthMask(GL_TRUE);
+		glEnable(GL_DEPTH_TEST);
+	} else {
+
+		glStencilFunc(GL_EQUAL, showPortals, 0xFF);
+		glStencilMask(0x00);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		//		glDepthMask(GL_TRUE);
+		glEnable(GL_DEPTH_TEST);
+	}
+
+	if(showPortals)
+	{
+		if (portal1->doesExist())
+		{
+
+			portal1->draw(cam, shaderProgram);
+
+		}
+
+		if (portal2->doesExist())
+		{
+
+			portal2->draw(cam, shaderProgram);
+		}
+	}
+
+
+
+	if(!showPortals)
+	{
+		if (portal1->doesExist())
+		{
+			Vec3D oldSize = portal1->getSize();
+			portal1->setSize(1.1f*oldSize);
+
+			portal1->draw(cam, shaderProgram);
+			portal1->setSize(oldSize);
+
+		}
+
+		if (portal2->doesExist())
+		{
+
+			Vec3D oldSize = portal2->getSize();
+			portal2->setSize(1.1f*oldSize);
+
+			portal2->draw(cam, shaderProgram);
+			portal2->setSize(oldSize);
+
+		}
+	}
+
+
 	for (int lev = 0; lev < num_levels; lev++)
 	{
 		for (int i = 0; i < width*height; i++)
@@ -373,14 +478,98 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 		shot->draw(cam, shaderProgram);
 	}
 
-	if (portal1->doesExist())
-	{
-		portal1->draw(cam, shaderProgram);
+
+
+
+
+
+	Vec3D P1 = portal1->getWPosition();
+	Vec3D P2 = portal2->getWPosition();
+
+	Vec3D ME = cam->getPos();
+
+	Vec3D ME_TO_P1 = ME-P1 ;
+	Vec3D ME_TO_P2 = ME-P2;
+
+	glm::vec3 N1 = util::vec3DtoGLM( portal1->getNorm());
+	glm::vec3 N2 = util::vec3DtoGLM( portal2->getNorm());
+
+	glm::vec3 LOOK = util::vec3DtoGLM( cam->getDir());
+
+	glm::vec4 look1 = glm::rotate(glm::mat4(1.0f), acos(glm::dot(N1, N2)), glm::vec3(0,1,0))*glm::vec4(LOOK,0);
+	glm::vec4 look2 = glm::rotate(glm::mat4(1.0f), acos(glm::dot(N2,N1 )), glm::vec3(0,1,0))*glm::vec4(LOOK,0);
+
+
+
+	glStencilFunc(GL_EQUAL, 1, 0xFF);
+	glStencilMask(0x00);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	//		glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
+
+	Camera c;
+	c.setHA(cam->getHA());
+	c.setUp(cam->getUp());
+	c.setDir( cam->getDir());
+	c.setPos(cam->getPos()+Vec3D(1,0,0));
+	c.setRight(cam->getRight());
+
+
+	Camera c2;
+	c2.setHA(cam->getHA());
+	c2.setUp(cam->getUp());
+	c2.setDir(cam->getDir());
+	c2.setPos(cam->getPos()+Vec3D(0,0,1));
+	c2.setRight(cam->getRight());
+
+
+	GLint uniView = glGetUniformLocation(shaderProgram, "view");
+
+	//build view matrix from Camera
+	glm::mat4 view = glm::lookAt(
+															 util::vec3DtoGLM((&c)->getPos()),
+															 util::vec3DtoGLM((&c)->getPos() + (&c)->getDir()),  //Look at point
+															 util::vec3DtoGLM((&c)->getUp()));
+
+	glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
+
+	if (!showPortals) {
+		drawOnlyWorld(&c, shaderProgram, uniTexID, 1);
 	}
-	if (portal2->doesExist())
-	{
-		portal2->draw(cam, shaderProgram);
+
+
+	glStencilFunc(GL_EQUAL, 2, 0xFF);
+	glStencilMask(0x00);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	//		glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
+
+
+
+
+	GLint uniView2 = glGetUniformLocation(shaderProgram, "view");
+
+	//build view matrix from Camera
+	glm::mat4 view2 = glm::lookAt(
+															 util::vec3DtoGLM((&c2)->getPos()),
+															 util::vec3DtoGLM((&c2)->getPos() + (&c2)->getDir()),  //Look at point
+															 util::vec3DtoGLM((&c2)->getUp()));
+
+	glUniformMatrix4fv(uniView2, 1, GL_FALSE, glm::value_ptr(view2));
+
+	if (!showPortals) {
+		drawOnlyWorld(&c2, shaderProgram, uniTexID, 2);
 	}
+
+
+
+
+}
+void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
+{
+	drawOnlyWorld(cam, shaderProgram, uniTexID, false);
 }
 
 //check if given pos vector collides with and WObjs in map

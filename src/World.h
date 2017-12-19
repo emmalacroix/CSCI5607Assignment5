@@ -94,6 +94,8 @@ public:
 	//OTHERS
 	bool parseFile(std::ifstream& input);
 	void draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID);
+	void drawOnlyWorld(Camera * cam, GLuint shaderProgram, GLuint uniTexID, int showPortals);
+
 	Intersection checkCollision(Vec3D pos);
 	Intersection checkPortalCollision(WO_Portal* portal, Vec3D pos);
 	void removeWO(Vec3D pos);
