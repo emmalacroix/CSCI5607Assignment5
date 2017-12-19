@@ -398,7 +398,7 @@ int main(int argc, char *argv[]) {
 		glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
 
 		fullscreen ? fov = 3.14f / 2 : fov = 3.14f / 4;
-		glm::mat4 proj = glm::perspective(fov, 800.0f / 600.0f, 0.01f, 1000.0f); //FOV, aspect, near, far
+		glm::mat4 proj = glm::perspective(fov, 800.0f / 600.0f, 0.01f, 200.0f); //FOV, aspect, near, far
 		glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
 
 		glActiveTexture(GL_TEXTURE0);
