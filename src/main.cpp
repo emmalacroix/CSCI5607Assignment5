@@ -515,7 +515,7 @@ void mouseMove(SDL_MouseMotionEvent & event, Character* player, float horizontal
 	horizontal_angle += mouse_speed * step_size * float(screen_width / 2 - event.x);
 	vertical_angle += mouse_speed * step_size * float(screen_height / 2 - event.y);
 
-	std::cout << vertical_angle << std::endl;
+	//std::cout << vertical_angle << std::endl;
 
 	vertical_angle = fmin(vertical_angle, 0.9*M_PI/2);
 	vertical_angle = fmax(vertical_angle, 0.9*-M_PI/2);
