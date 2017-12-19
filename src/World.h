@@ -99,6 +99,7 @@ public:
 	void removeWO(Vec3D pos);
 	void movePortal(WO_Portal* portal, Vec3D pos);
 	void shootPortal(Vec3D pos, Vec3D dir, int time, WO_Portal* portal);
+	void World::drawNonPortals(Camera * cam, GLuint shaderProgram, GLuint uniTexID);
 
 };
 

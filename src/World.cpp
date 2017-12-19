@@ -313,66 +313,6 @@ bool World::parseFile(ifstream & input)
 //also draws floor and portals
 void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 {
-	for (int lev = 0; lev < num_levels; lev++)
-	{
-		for (int i = 0; i < width*height; i++)
-		{
-			if (levels_array[lev][i]->getType() != EMPTY_WOBJ)	//only draw non-empty WObjs
-			{
-				if (levels_array[lev][i]->getType() == DOOR_WOBJ)
-				{
-					WO_Door* door = (WO_Door*)levels_array[lev][i];
-					Vec3D d_pos = door->getWPosition();
-
-					//if the door IS NOT locked
-					if (!door->isLocked())
-					{
-						if (d_pos.getY() < (lev + 2.5) * cell_width)
-						{
-							//printf("Moving door %c up!\n", door->getID());
-							d_pos.setY(d_pos.getY() + (open_speed));	//move door up if not all the way up
-						}
-						else if (d_pos.getY() >= (lev + 2.5) * cell_width) //all the way up
-						{
-							door->lock();
-							d_pos.setY(d_pos.getY() - (open_speed));	//move door down if all the way up
-						}
-					}
-					else //if the door IS locked
-					{
-						if (d_pos.getY() > lev + 0.5 && d_pos.getY() <= (lev + 2.5) * cell_width)
-						{
-							d_pos.setY(d_pos.getY() - (open_speed));	//move door down if all the way up
-						}
-
-						//do nothing if we're locked and at 0
-					}
-
-					door->setWPosition(d_pos);
-					glUniform1i(uniTexID, -1); //Set texture ID to use (0 = wood texture)
-				}//END DOOR_WOBJ if
-				else if (levels_array[lev][i]->getType() == WALL_WOBJ)
-				{
-					glUniform1i(uniTexID, 0);
-				}
-				else
-				{
-					glUniform1i(uniTexID, -1); //Set texture ID to use (-1 = no texture)
-				}
-				levels_array[lev][i]->draw(cam, shaderProgram);
-			}
-		}//END row/col for loop
-	}//END levels for loop
-
-	glUniform1i(uniTexID, 1); //Set texture ID to use for floor (1 = metal floor)
-	floor->draw(cam, shaderProgram);
-
-	glUniform1i(uniTexID, -1); //Set texture ID to use for projectile, portals (-1 = no texture)
-	if (shot->shooting())
-	{
-		shot->draw(cam, shaderProgram);
-	}
-
 	if (portal1->doesExist())
 	{
 		portal1->draw(cam, shaderProgram);
@@ -381,6 +321,9 @@ void World::draw(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 	{
 		portal2->draw(cam, shaderProgram);
 	}
+
+	//after rendering portals, can draw rest of scene normally
+	drawNonPortals(cam, shaderProgram, uniTexID);
 }
 
 //check if given pos vector collides with and WObjs in map
@@ -615,5 +558,68 @@ glm::vec3 World::getLetterColor(int i)
 	default:
 		printf("\nERROR. Invalid id number entered for key/door ID.\n");
 		return glm::vec3(-1, -1, -1);
+	}
+}
+
+void World::drawNonPortals(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
+{
+	for (int lev = 0; lev < num_levels; lev++)
+	{
+		for (int i = 0; i < width*height; i++)
+		{
+			if (levels_array[lev][i]->getType() != EMPTY_WOBJ)	//only draw non-empty WObjs
+			{
+				if (levels_array[lev][i]->getType() == DOOR_WOBJ)
+				{
+					WO_Door* door = (WO_Door*)levels_array[lev][i];
+					Vec3D d_pos = door->getWPosition();
+
+					//if the door IS NOT locked
+					if (!door->isLocked())
+					{
+						if (d_pos.getY() < (lev + 2.5) * cell_width)
+						{
+							//printf("Moving door %c up!\n", door->getID());
+							d_pos.setY(d_pos.getY() + (open_speed));	//move door up if not all the way up
+						}
+						else if (d_pos.getY() >= (lev + 2.5) * cell_width) //all the way up
+						{
+							door->lock();
+							d_pos.setY(d_pos.getY() - (open_speed));	//move door down if all the way up
+						}
+					}
+					else //if the door IS locked
+					{
+						if (d_pos.getY() > lev + 0.5 && d_pos.getY() <= (lev + 2.5) * cell_width)
+						{
+							d_pos.setY(d_pos.getY() - (open_speed));	//move door down if all the way up
+						}
+
+						//do nothing if we're locked and at 0
+					}
+
+					door->setWPosition(d_pos);
+					glUniform1i(uniTexID, -1); //Set texture ID to use (0 = wood texture)
+				}//END DOOR_WOBJ if
+				else if (levels_array[lev][i]->getType() == WALL_WOBJ)
+				{
+					glUniform1i(uniTexID, 0);
+				}
+				else
+				{
+					glUniform1i(uniTexID, -1); //Set texture ID to use (-1 = no texture)
+				}
+				levels_array[lev][i]->draw(cam, shaderProgram);
+			}
+		}//END row/col for loop
+	}//END levels for loop
+
+	glUniform1i(uniTexID, 1); //Set texture ID to use for floor (1 = metal floor)
+	floor->draw(cam, shaderProgram);
+
+	glUniform1i(uniTexID, -1); //Set texture ID to use for projectile, portals (-1 = no texture)
+	if (shot->shooting())
+	{
+		shot->draw(cam, shaderProgram);
 	}
 }
