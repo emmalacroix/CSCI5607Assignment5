@@ -199,11 +199,12 @@ int main(int argc, char *argv[]) {
 	player->setRight(Vec3D(0, 0, 1));				//look along +x
 	player->setJumpStart(-jump_duration);			//not jumping at start of program
 	//player->setTraveling(false);					//not traveling through a portal at start
+	player->setYHeight(0.5*cell_width);
 
-													////////////////////////////////////////////////////
-													//MOUSE : keep track of angle the mouse has changed
-													//			player view through!
-													////////////////////////////////////////////////////
+	////////////////////////////////////////////////////
+	//MOUSE : keep track of angle the mouse has changed
+	//			player view through!
+	////////////////////////////////////////////////////
 	float horizontal_angle = 0;
 	float vertical_angle = 0;
 
@@ -276,6 +277,7 @@ int main(int argc, char *argv[]) {
 	glBindVertexArray(0); //Unbind the VAO in case we want to create a new one
 
 	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_CULL_FACE); //turning this on messes with displaying non-stencil portals
 
 	/*===========================================================================================
 	* EVENT LOOP (Loop forever processing each event as fast as possible)
@@ -387,12 +389,16 @@ int main(int argc, char *argv[]) {
 		cam->setUp(player->getUp());
 		cam->setRight(player->getRight());
 
+		//clear screen and buffers
 		glClearColor(.2f, 0.4f, 0.8f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glDepthMask(GL_TRUE);
+		glStencilMask(0xFF);
+		glClear(GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(shaderProgram); //Set the active shader (only one can be used at a time)
 
-									 //vertex shader uniforms
+		//vertex shader uniforms
 		GLint uniView = glGetUniformLocation(shaderProgram, "view");
 		GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
 		GLint uniTexID = glGetUniformLocation(shaderProgram, "texID");
@@ -805,7 +811,7 @@ void updateForJumping(Character* player, World* myWorld)
 		Vec3D right = player->getRight();
 		Vec3D up = player->getUp();
 
-		Intersection above_sect = myWorld->checkCollision(pos + 0.1*up);
+		Intersection above_sect = myWorld->checkCollision(pos + 0.1*cell_width*up);
 		WorldObject* above_obj = above_sect.getObject();
 
 		if (above_obj != nullptr)
