@@ -340,7 +340,65 @@ Intersection World::checkCollision(Vec3D pos)
 		pos.getY() < num_levels*cell_width
 		)
 	{
+		//first check and see if collision with portal
+		if (portal1->doesExist())
+		{
+			iSect = checkPortalCollision(portal1, pos);
+			if (iSect.getObject() != nullptr) return iSect;
+		}
+		if (portal2->doesExist())
+		{
+			iSect = checkPortalCollision(portal2, pos);
+			if (iSect.getObject() != nullptr) return iSect;
+		}
+
 		iSect.setObject(getWO(pos));
+	}
+	return iSect;
+}
+
+Intersection World::checkPortalCollision(WO_Portal* portal, Vec3D pos)
+{
+	Intersection iSect;
+
+	if (portal->getNorm().getZ())
+	{
+		if (pos.getX() >= portal->getWPosition().getX() - .02 &&
+			pos.getX() < portal->getWPosition().getX() + .02 &&
+			pos.getY() >= portal->getWPosition().getY() - .33 &&
+			pos.getY() < portal->getWPosition().getY() + .33 &&
+			pos.getZ() >= portal->getWPosition().getZ() - .17 &&
+			pos.getZ() < portal->getWPosition().getZ() + .17
+			)
+		{
+			iSect.setObject(portal);
+		}
+	}
+	else if (portal->getNorm().getX())
+	{
+		if (pos.getX() >= portal->getWPosition().getX() - .17 &&
+			pos.getX() < portal->getWPosition().getX() + .17 &&
+			pos.getY() >= portal->getWPosition().getY() - .33 &&
+			pos.getY() < portal->getWPosition().getY() + .33 &&
+			pos.getZ() >= portal->getWPosition().getZ() - .02 &&
+			pos.getZ() < portal->getWPosition().getZ() + .02
+			)
+		{
+			iSect.setObject(portal);
+		}
+	}
+	else if (portal->getNorm().getY())
+	{
+		if (pos.getX() >= portal->getWPosition().getX() - .17 &&
+			pos.getX() < portal->getWPosition().getX() + .17 &&
+			pos.getY() >= portal->getWPosition().getY() - .02 &&
+			pos.getY() < portal->getWPosition().getY() + .02 &&
+			pos.getZ() >= portal->getWPosition().getZ() - .33 &&
+			pos.getZ() < portal->getWPosition().getZ() + .33
+			)
+		{
+			iSect.setObject(portal);
+		}
 	}
 	return iSect;
 }
@@ -519,12 +577,12 @@ void World::drawNonPortals(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 					//if the door IS NOT locked
 					if (!door->isLocked())
 					{
-						if (d_pos.getY() < 2 * cell_width)
+						if (d_pos.getY() < (lev + 2.5) * cell_width)
 						{
 							//printf("Moving door %c up!\n", door->getID());
 							d_pos.setY(d_pos.getY() + (open_speed));	//move door up if not all the way up
 						}
-						else if (d_pos.getY() >= 2 * cell_width) //all the way up
+						else if (d_pos.getY() >= (lev + 2.5) * cell_width) //all the way up
 						{
 							door->lock();
 							d_pos.setY(d_pos.getY() - (open_speed));	//move door down if all the way up
@@ -532,7 +590,7 @@ void World::drawNonPortals(Camera * cam, GLuint shaderProgram, GLuint uniTexID)
 					}
 					else //if the door IS locked
 					{
-						if (d_pos.getY() > 0 && d_pos.getY() <= 2 * cell_width)
+						if (d_pos.getY() > lev + 0.5 && d_pos.getY() <= (lev + 2.5) * cell_width)
 						{
 							d_pos.setY(d_pos.getY() - (open_speed));	//move door down if all the way up
 						}

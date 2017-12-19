@@ -50,15 +50,16 @@ float fov = 3.14f / 4;
 const float cell_width = 1.0;
 
 const int jump_duration = 1000; //in milliseconds
-const float jump_height = 1.0;
 const float mouse_speed = 10;
 
 #ifdef __APPLE__
 const float step_size = 0.006f * cell_width;
 const float acceleration = 0.1f;
+const float jump_height = 2.0 * cell_width;
 #else
 const float step_size = 0.002f * cell_width;
 const float acceleration = 0.002f;
+const float jump_height = 1.0 * cell_width;
 #endif
 
 //shader globals
@@ -198,8 +199,7 @@ int main(int argc, char *argv[]) {
 	player->setUp(Vec3D(0, 1, 0));					//map is in xz plane
 	player->setRight(Vec3D(0, 0, 1));				//look along +x
 	player->setJumpStart(-jump_duration);			//not jumping at start of program
-	//player->setTraveling(false);					//not traveling through a portal at start
-	player->setYHeight(0.5*cell_width);
+	player->setTraveling(false);					//not traveling through a portal at start
 
 	////////////////////////////////////////////////////
 	//MOUSE : keep track of angle the mouse has changed
@@ -207,13 +207,6 @@ int main(int argc, char *argv[]) {
 	////////////////////////////////////////////////////
 	float horizontal_angle = 0;
 	float vertical_angle = 0;
-
-	/////////////////////////////////
-	//PORTALS
-	/////////////////////////////////
-	//testing testing
-	//myWorld->movePortal(myWorld->getPortal1(), start_pos);
-	//myWorld->movePortal(myWorld->getPortal2(), start_pos+Vec3D(1,0,0));
 
 	/////////////////////////////////
 	//BUILD VERTEX ARRAY OBJECT
@@ -579,35 +572,9 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		//printf("Left arrow pressed - step to the left\n");
 		player->setVelocity(Vec3D(-1 * step_size*right.getX(), 0, -1 * step_size*right.getZ()));
 		break;
-		////////////////////////////////
-		//TURNING WITH A/D KEYS		  //
-		////////////////////////////////
-		/*case SDLK_d:
-		//printf("D key pressed - turn to the right\n");
-		temp_dir = dir + (50*step_size*right);
-		temp_right = cross(temp_dir, up); //calc new right using new dir
-		break;
-		case SDLK_a:
-		//printf("A key pressed - turn to the left\n");
-		temp_dir = dir - (50*step_size*right);
-		temp_right = cross(temp_dir, up); //calc new right using new dir
-		break;*/
-		////////////////////////////////
-		//TILTING WITH W/S KEYS		  //
-		////////////////////////////////
-		/*case SDLK_w:
-		//printf("W key pressed - tilt up\n");
-		temp_dir = dir + (50*step_size*up);
-		temp_up = cross(right, temp_dir); //calc new up using new dir
-		break;
-		case SDLK_s:
-		//printf("S key pressed - tilt down\n");
-		temp_dir = dir - (50*step_size*up);
-		temp_up = cross(right, temp_dir); //calc new up using new dir
-		break;*/
-		////////////////////////////////
-		//JUMP WITH SPACEBAR		  //
-		////////////////////////////////
+	////////////////////////////////
+	//JUMP WITH SPACEBAR		  //
+	////////////////////////////////
 	case SDLK_SPACE:
 	{
 		int time = SDL_GetTicks();
@@ -618,7 +585,6 @@ void onKeyDown(SDL_KeyboardEvent & event, Character* player, World* myWorld)
 		}
 		break;
 	}
-
 	////////////////////////////////
 	//PICK UP ITEM WITH E		  //
 	////////////////////////////////
@@ -713,33 +679,42 @@ bool checkPosition(Vec3D& temp_pos, World* myWorld, Character* player)
 			break;
 		case PORTAL_WOBJ:
 			cout << "Collided with a portal" << endl;
-			/*if (!player->isTraveling()) //we are just now entering a portal
+			if (!player->isTraveling()) //we are just now entering a portal
 			{
 				player->enterPortal();
 				WO_Portal * portal = (WO_Portal *)collided_obj;
+				WO_Portal * partner_portal;
 				if (portal == myWorld->getPortal1())
 				{
-					if (myWorld->getPortal2()->doesExist())
-					{
-						temp_pos = myWorld->getPortal2()->getWPosition();
-						player->setDir(myWorld->getPortal2()->getDir());
-					}
+					partner_portal = myWorld->getPortal2();
 				}
 				else {
-					if (myWorld->getPortal1()->doesExist())
-					{
-						temp_pos = myWorld->getPortal1()->getWPosition();
-						player->setDir(myWorld->getPortal1()->getDir());
-					}
+					partner_portal = myWorld->getPortal1();
 				}
-			}*/
+				if (partner_portal->doesExist())
+				{
+					//cout << "h_angle is " << horizontal_angle << endl;
+					//cout << "v_angle is " << vertical_angle << endl;
+					temp_pos = partner_portal->getWPosition();
+					//Vec3D norm = portal->getNorm();
+					Vec3D partner_norm = partner_portal->getNorm();
+					player->setDir(partner_norm);
+					player->setRight(cross(player->getDir(), player->getUp()));
+					//float h_angle = acos(dotProduct(Vec3D(norm.getX(), 0, norm.getZ()), Vec3D(partner_norm.getX(), 0, partner_norm.getZ())));
+					//float v_angle = acos(dotProduct(Vec3D(0, norm.getY(), 0), Vec3D(0, partner_norm.getY(), 0)));
+					//if (h_angle != 0.0) horizontal_angle += h_angle;
+					//if (v_angle != 0.0) vertical_angle += v_angle;
+					//cout << "h_angle is " << horizontal_angle << endl;
+					//cout << "v_angle is " << vertical_angle << endl;
+				}
+			}
 			break;
 		default:
 			//collided with start -- do nothing
-			/*if (player->isTraveling()) //we were previously traveling through a portal
+			if (player->isTraveling()) //we were previously traveling through a portal
 			{
 				player->exitPortal(); //no longer traveling through portal
-			}*/
+			}
 			break;
 		}//END collision switch
 	}
@@ -769,14 +744,18 @@ bool updateCharacter(Character * player, World * myWorld)
 void updateForFalling(Character * player, World * myWorld)
 {
 	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
-	if (t >= jump_duration)
+	if (t >= jump_duration / 2)
 	{
+		Vec3D temp_vel = player->getVelocity();
+
 		Vec3D pos = player->getPos();
 		Vec3D dir = player->getDir();
 		Vec3D right = player->getRight();
 		Vec3D up = player->getUp();
 
-		Intersection under_sect = myWorld->checkCollision(pos + (-0.1*cell_width*up));
+		Vec3D down = Vec3D(0, -1, 0); //direction of "gravity"
+
+		Intersection under_sect = myWorld->checkCollision(pos + 0.5*cell_width*down - 0.1*up);
 		WorldObject* under_obj = under_sect.getObject();
 
 		if (under_obj != nullptr)
@@ -787,17 +766,24 @@ void updateForFalling(Character * player, World * myWorld)
 				Vec3D down = Vec3D(0, -1, 0);
 
 				//if they are parallel, then it was already falling
-				if (!(vel == Vec3D(0, 0, 0)) && (cross(vel, -1 * up) == Vec3D(0, 0, 0)))
+				if (!(temp_vel == Vec3D(0, 0, 0)) && (cross(temp_vel, down) == Vec3D(0, 0, 0)))
 				{
-					player->setVelocity((step_size + acceleration)*down);
+					temp_vel = (step_size + acceleration)*down;
 				}
 				else
 				{
-					player->setVelocity(step_size*down);
+					temp_vel = step_size*down;
 				}
+			}
+			else {
+				temp_vel = Vec3D(temp_vel.getX(), 0, temp_vel.getZ());
 			}
 			//if not Empty, don't change the velocity
 		}
+		else {
+			temp_vel = Vec3D(temp_vel.getX(), 0, temp_vel.getZ());
+		}
+		player->setVelocity(temp_vel);
 	}
 }
 
@@ -806,12 +792,14 @@ void updateForJumping(Character* player, World* myWorld)
 	int t = SDL_GetTicks() - player->getJumpStart(); //time since jump started
 	if (t < jump_duration) //it has been less than jump_duration ms since jump started
 	{
+		Vec3D temp_vel = player->getVelocity();
+
 		Vec3D pos = player->getPos();
 		Vec3D dir = player->getDir();
 		Vec3D right = player->getRight();
 		Vec3D up = player->getUp();
 
-		Intersection above_sect = myWorld->checkCollision(pos + 0.1*cell_width*up);
+		Intersection above_sect = myWorld->checkCollision(pos + 0.1*up);
 		WorldObject* above_obj = above_sect.getObject();
 
 		if (above_obj != nullptr)
@@ -820,11 +808,19 @@ void updateForJumping(Character* player, World* myWorld)
 			{
 				float x = (float)t / (float)jump_duration;
 				float y = 4 - 8 * x; //derivative of y=-(1/4)*(4x-2)^2+1 (nicely arched jump parabola)
-				player->setVelocity(Vec3D(fabs(y)*jump_height*step_size*up.getX(), y*jump_height*step_size*up.getY(), fabs(y)*jump_height*step_size*up.getZ()));
+				temp_vel = Vec3D(temp_vel.getX(), y*jump_height*step_size*up.getY(), temp_vel.getZ());
+			}
+			else {
+				player->setJumpStart(-jump_duration);
 			}
 		}
+		else {
+			player->setJumpStart(-jump_duration);
+		}
+		player->setVelocity(temp_vel);
 	}
 }
+
 
 bool updatePortalShot(World* myWorld, int time) //returns true if update successful
 {

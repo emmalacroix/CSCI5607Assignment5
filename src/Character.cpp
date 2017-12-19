@@ -61,9 +61,9 @@ void Character::setJumpStart(int s)
 	jump_start = s;
 }
 
-void Character::setYHeight(float y)
+void Character::setTraveling(bool b)
 {
-	y_height = y;
+	portal_traveling = b;
 }
 
 /*----------------------------*/
@@ -124,9 +124,9 @@ int Character::getJumpStart()
 	return jump_start;
 }
 
-float Character::getYHeight()
+bool Character::isTraveling()
 {
-	return y_height;
+	return portal_traveling;
 }
 
 /*----------------------------*/
@@ -147,7 +147,7 @@ void Character::draw(Camera* cam, GLuint shaderProgram, World* myWorld, GLuint u
 {
 	//draw current item in front
 	WorldObject* curItem = getCurItem();
-	
+
 	if (curItem != nullptr)
 	{
 		curItem->setWPosition(pos_VEC + myWorld->getCollisionRadius() * dir_VEC);
@@ -176,4 +176,14 @@ bool Character::hasKey(char c)
 		}
 	}
 	return false;
+}
+
+void Character::enterPortal()
+{
+	portal_traveling = true;
+}
+
+void Character::exitPortal()
+{
+	portal_traveling = false;
 }
